@@ -1,0 +1,105 @@
+---
+title: "template"
+author: 
+    name: "Leo Lu"
+    email: "leo0650@gmail.com"
+    website: "https://github.com/leoluyi"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: 
+    ioslides_presentation:
+      css: css/style.css
+      highlight: tango
+      transition: faster
+      widescreen: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## {.flexbox .vcenter}
+
+置中圖片
+
+<img src="img/sw.jpg" style="height:auto; max-width:100%;">
+
+
+## 主標題 | 副標題
+
+## How to use this slides
+
+The following single character keyboard shortcuts enable alternate display modes:
+
+- 'f' enable fullscreen mode
+- 'w' toggle widescreen mode
+- 'o' enable overview mode
+- 'h' enable code highlight mode
+- 'p' show presenter notes
+
+## 小字 {.smaller}
+
+內文的字會變小
+
+
+## 內容區塊出現 {.build}
+
+- Content should be displayed incrementally
+- Like this
+- And this
+
+## 分點出現
+
+>- Bullet 1
+>- Bullet 2
+>- Bullet 3
+
+## Code Highlighting
+
+### <b>
+x <- 10  
+y <- x * 2
+### </b>
+
+
+## 內容置中 {.flexbox .vcenter}
+
+<div class="centered">
+我是置中文字
+</div>
+
+## 重點文字 {.flexbox .vcenter .emphasized}
+
+hihi
+
+## Text Color
+
+<div class="red2">
+This text is red
+</div>
+
+## 兩欄：圖片+文字
+
+<div class="columns-2">
+  <img src="img/sw.jpg" style="height:auto; max-width:100%;">
+
+  - Bullet 1
+  - Bullet 2
+  - Bullet 3
+</div>
+
+## 兩欄獨立圖片 {.columns-2}
+
+```{r, echo=FALSE, dev='svg', out.width=420}
+par(mar = c(5, 4, 1, 2) + 0.1)
+pairs(iris[1:4], pch = 21,
+      bg = c("red", "green3", "blue")[unclass(iris$Species)])
+```
+
+<img src="img/sw.jpg" style="height:auto; max-width:100%;">
+
+## 兩欄文字 {.columns-2}
+
+- 好像無法
+- Bullet 1
+- Bullet 2
+- Bullet 3

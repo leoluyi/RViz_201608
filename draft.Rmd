@@ -1,0 +1,486 @@
+---
+title: "Draft"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+
+## Building Plots Layer by Layer
+
+- Every plot starts with at least `ggplot(data = )`
+- Can also add aesthetic mapping with `ggplot(data = , aes(x = , y = ))`
+
+# The Grammar of Graphics
+
+## gg = Grammar of Graphics
+
+- Set of rules for creation of graphics
+- Each graphic made up of several independent components
+- Each component can be manipulated
+- Combine components in a specific way to create graphics
+- Not limited to pre-defined graphics types
+- Extremely flexible
+
+## The grammar's "Parts of Speech"
+
+- Data (noun/subject)
+- Aesthetic mappings (adjectives)
+- Geom (verb)
+- Stat (adverb)
+- Position (preposition)
+
+## "Sentences" and "Paragraphs"
+
+- All components combine to make a layer (sentence)
+- Can places layers on top of each other (paragraph)
+- String it all together with + (punctuation)
+
+
+# Quick Plots
+
+## When and why to use `qplot`
+
+- Need quick summaries or views of the data
+- For your eyes only
+- Beginning of exploratory data analysis
+- Most components are automatically generated
+  - Creates most likely plot of interest based on data
+- Less code, quicker graphic creation
+- Less flexibility, hard to layer on top of
+
+## `qplot` Example: Histogram
+
+```{r, fig.width=5, fig.height=4, fig.align='center', warning=FALSE}
+library(ggplot2)
+data(iris)
+qplot(Sepal.Length, data = iris)
+```
+
+## `qplot` Example: Histogram + bin width
+
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+library(ggplot2)
+data(iris)
+qplot(Sepal.Length, data = iris, binwidth = .25)
+```
+
+## `qplot` Example: Scatter Plot
+
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+qplot(Sepal.Length, Sepal.Width, data = iris)
+```
+
+## `qplot` Example: Scatter Plot with Color
+
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+qplot(Sepal.Length, Sepal.Width, data = iris, color = Species)
+```
+
+## `qplot` Example: Bar Chart
+
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+data(mtcars)
+qplot(as.factor(cyl), data = mtcars)
+```
+
+## `qplot` Conclusions
+
+- Really only use at the very beginning of analysis
+- But more advanced plots possible with `qplot`
+- Using `ggplot` is better in the long run
+
+# Building Plots Layer by Layer
+
+## The Beginning
+
+- Every plot starts with at least `ggplot(data = )`
+- Can also add aesthetic mapping with `ggplot(data = , aes(x = , y = ))`
+- `aes()` dictates how variables are mapped to visual features
+- Example: recreating the scatter plot
+```{r, eval = FALSE}
+ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width))
+```
+- Creates an error: `No layers in plot`
+- Haven't told it what to do with the subject. No verb!
+
+## The Middle
+
+- Add a `geom`
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+p <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width))
+p + geom_point()
+```
+
+## Add color `aes`
+```{r, fig.width=5, fig.height=4, fig.align='center'}
+p <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width,
+                             color = Species))
+p + geom_point()
+```
+
+
+## Many ways to do the same thing
+
+- High flexibility means there are lots of ways to create simple plots
+- Create the same plot as before with slightly different code
+```{r, eval=FALSE}
+# move all arguments to geom
+ggplot() + geom_point(data = iris, aes(Sepal.Length, Sepal.Width,
+                                       color = Species))
+# move aes options to geom
+ggplot(data = iris) + geom_point(aes(Sepal.Length, Sepal.Width,
+                                       color = Species))
+# split up aes options between ggplot and geom
+ggplot(data = iris, aes(Sepal.Length, Sepal.Width)) +
+  geom_point(aes(color = Species))
+```
+
+## `geom` Types {.smaller}
+`geom_...()`
+
+<div class="columns-4">
+  - `abline`
+  - `area`
+  - `bar`
+  - `bin2d`
+  - `blank`
+  - `boxplot`
+  - `contour`
+  - `crossbar`
+  - `density`
+  - `density2d`
+  - `dotplot`
+  - `errorbar`
+  - `errorbarh`
+  - `freqpoly`
+  - `hex`
+  - `histogram`
+  - `hline`
+  - `jitter`
+  - `line`
+  - `linerange`
+  - `map`
+  - `path`
+  - `point`
+  - `pointrange`
+  - `polygon`
+  - `quantile`
+  - `raster`
+  - `rect`
+  - `ribbon`
+  - `rug`
+  - `segment`
+  - `smooth`
+  - `step`
+  - `text`
+  - `tile`
+  - `violin`
+  - `vline`
+</div>
+
+## More on `geom`
+
+- For any set of variables, only certain `geom` functions make sense
+- Each `geom` has its own arguments to customize the appearance
+- Each `geom` has its own required and accepted `aes` options
+    - Some need only one variable: `aes(x = )`
+    - Some need two: `aes(x = , y = )`
+    - Some need three: `aes(x = , ymin = , ymax =)`
+    - Some need four: `aes(x = , xend = , y = , yend = )`
+- See the [documentation](http://docs.ggplot2.org/current/) for more detail
+
+## The Perfect Pair: `geom` and `stat`
+
+- `stat` functions transform the data for the `geom`
+- Most `geom` functions have a defaut `stat` that that never needs changing
+- 99.5% of the time, no need to worry about the `stat`
+- You might need to change the `stat` if:
+    - You have summaries of data instead of the full data set
+    - You want to plot a function on top of the data
+    - You want a
+
+## Example: `stat='identity'`
+
+## The End
+
+- All plots so far are good, but not exciting
+- Many ways to make plot prettier, cleaner, etc.
+    + Change its theme
+    + Change its color scheme
+    + Change its coordinate layout
+    + More advanced options (later)
+- Changing these things can make the plots easier to read in a paper, see on a screen, or fit a document theme
+
+## Change the plot's theme
+
+Biggest complaint about `ggplot2`:
+
+<center> *"Why is the background like that?!?"* </center>
+
+It's just the default: change the theme!
+```{r, fig.align='center', fig.height=3, fig.width=4}
+p + geom_point() + theme_classic()
+```
+
+## Change the color scheme
+
+Second biggest complaint about `ggplot`:
+
+<center> *"What* *are* *those* *colors?!?"* </center>
+
+Again, it's just the default: change the color scheme!
+```{r, fig.align='center', fig.height=3, fig.width=4}
+NORCColors <- c("#e76f00", "#87887f", "black")
+p + geom_point() + theme_classic() +
+  scale_color_manual(values = NORCColors)
+```
+
+## Change the coordinates
+
+- Flip the x and y axes
+- Log transform the axes
+- Polar coordinates
+- Fixed coordinates
+
+```{r, fig.align='center', fig.height=2.5, fig.width=4}
+NORCColors <- c("#e76f00", "#87887f", "black")
+p + geom_point() + theme_classic() + coord_flip() +
+  scale_color_manual(values = NORCColors)
+```
+
+# Advanced Customization
+
+## Theme Elements {.smaller}
+
+- The `theme()` function can take more than 40 arguments to customize appearance
+- Fall into four main categories:
+    + `line` - any lines: axes, tick marks, gridlines
+    + `rect` - any rectangles: backgrounds, borders, legend box
+    + `text` - any text: axis labels, legend labels
+    + `title` - any title: axis title, plot title, legend title
+- Use one of four functions to change theme elements:
+    + `element_blank()`
+    + `element_line()`
+    + `element_rect()`
+    + `element_text()`
+- See [documentation](http://docs.ggplot2.org/current/theme.html) for detail and full list of options
+- `theme_classic()` or `theme_bw()` overrides `theme()`
+
+## Example: `theme()` {.smaller}
+Bar chart of rates from before:
+
+
+## Labels and Annotations
+
+- The `labs()` function changes the plot title, axis labels, and legend labels
+- The `annotate()` function allows annotation of any kind (text, points, arrows, etc) to a plot
+    + Any `geom` can be added as an annotation
+    + Use `annotate()` instead of another `geom` when annotations are not data-dependent
+
+## Example: `labs()` and `annotate()`
+
+```{r, fig.align='center', fig.height=3, fig.width=5}
+ggplot(data = NULL, aes(x = rnorm(1000))) + geom_density() +
+  stat_function(fun = dnorm, color = "red") +
+  labs(title = "Approximation to Normal Curve", x = "Datum Value",
+       y = "Probability Density Value") +
+  annotate("text", x = c(-2, 2), y = c(.35, .35),
+           label = c("Normal Curve","Data Density"),
+           color = c("red", "black")) +
+  theme_classic()
+
+```
+
+## Changing Text Font
+
+- NORC has specific fonts to use in official communication that aren't supported by `ggplot2`
+- Need another package, `extrafont` to access your computer's fonts
+- See [documentation](https://github.com/wch/extrafont) for installation and usage instructions
+- Once you install, register the fonts once, you can use it any time.
+    + Need `library(extrafont)` first
+
+## Example: Using Garamond in Plots {.smaller}
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+library(extrafont)
+```
+
+## Bar Chart: Orders of bar
+
+
+
+## Comprehensive Example #1: The Plot
+```{r echo = FALSE}
+data(midwest)
+midwest$inmetro <- as.factor(midwest$inmetro)
+levels(midwest$inmetro) <- c("No", "Yes")
+```
+```{r, fig.align='center', echo=FALSE, fig.width=9, fig.height=5}
+ggplot(data = midwest, aes(x = percbelowpoverty, fill = inmetro)) +
+  geom_histogram(binwidth = 2.5, color = 'black') +
+  facet_wrap( ~ state) +
+  labs(title = "Poverty Levels in the Midwest",
+       x = "Percent of County's Residents Living Below Poverty Level",
+       y = "Number of Counties",
+       fill = "In Metro Area?") +
+  scale_x_continuous(breaks = seq(0, 50, 5)) +
+  scale_y_continuous(breaks = seq(0, 26, 5)) +
+  scale_fill_manual(values = NORCColors) +
+  theme(strip.background = element_rect(fill = "transparent", colour = "lightgrey"),
+        panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "transparent", colour = NA)
+  )
+```
+
+# Change the plot's theme
+
+## Store your ggplot themes for reproducibility
+
+
+## Customized Color Scheme
+
+- Package `RColorBrewer`
+- `scale_xxx_manual(values = )`
+
+```{r}
+show_pallette <- function(mypalette) {
+  image(seq_along(mypalette), 1,
+        as.matrix(seq_along(mypalette)),
+        col = mypalette, xlab = "", ylab = "",
+        xaxt="n",yaxt="n",bty="n")
+}
+
+NORCColors <- c("#e76f00", "#87887f", "black")
+show_pallette(NORCColors)
+```
+
+## Comprehensive Example #1: The Code {.smaller}
+
+
+```{r, eval=FALSE}
+ggplot(data=midwest) +
+geom_histogram(aes(x=percbelowpoverty, fill=inmetro),
+  binwidth=2.5, color='black') +
+  facet_wrap(~state) +
+  labs(title="Poverty Levels in the Midwest",
+    x="Percent of County's Residents Living Below Poverty Level",
+    y="Number of Counties", fill="In Metro Area?") +
+  scale_x_continuous(breaks= seq(0,50, 5)) +
+  scale_y_continuous(breaks=seq(0,226, 2)) +
+  scale_fill_manual(values=NORCColors) +
+  theme(axis.text=element_text(colour='black', size=14),
+        axis.title=element_text(colour='black', size=18),
+        plot.title=element_text(colour='black', size=24),
+        strip.text=element_text(colour='black', size=16, face='bold'),
+        legend.text=element_text(colour='black', size=14),
+        legend.title=element_text(colour='black', size=18),
+        strip.background=element_rect(fill="transparent",colour=NA),
+        panel.background=element_rect(fill="transparent",colour=NA),
+        panel.grid= element_line(color='lightgrey'),
+        plot.background=element_rect(fill="transparent",colour=NA))
+```
+
+## Comprehensive Example #2: The Plot
+
+```{r echo=FALSE,fig.width=8, fig.height=5, fig.align='center', warning=FALSE}
+library(scales)
+data(economics)
+data(presidential)
+my_theme <- theme(legend.position='none',
+                  text=element_text(color = 'black'),
+                  axis.text = element_text(color = 'black'),
+                  panel.background=element_rect(fill="white"),
+                  plot.title = element_text(
+                    vjust = 2, size = 20, face = "bold"),
+                  plot.background=element_rect(fill=NA,colour=NA))
+yrng <- range(economics$unemploy/economics$pop)
+
+ggplot(data=economics, aes(date, unemploy/pop)) +
+  geom_rect(inherit.aes=FALSE, ## use new mapping
+            data=presidential,
+            aes(xmin=start, xmax=end, fill=party),
+            ymin=0, ymax=yrng[2]) + # plot bg color first
+  geom_line() + # plot data line
+  scale_fill_manual(values=alpha(c("blue", "red"), 0.2)) +
+  geom_text(inherit.aes=FALSE,
+            data = presidential[3:10,],
+            aes(x = start, y = rep(I(yrng[2]),8), label=name),
+            hjust=0,
+            vjust=rep(c(-.4,1),4), size=5) +
+  labs(title="Unemployment in the U.S. (1967-2007)",
+       x = "Year (observations are monthly)",
+       y = "Unemployment Rate (Unemployed / U.S. Population") +
+  scale_x_date(labels = date_format("%Y"), breaks = date_breaks("4 years")) + my_theme
+```
+
+## Comprehensive Example #2: The Code {.smaller}
+
+```{r eval = FALSE}
+library(scales)
+data(economics)
+data(presidential)
+my_theme <- theme(legend.position='none', text=element_text(family="Garamond", color = 'black'), axis.text = element_text(color = 'black'),
+        panel.background=element_rect(fill="white"),
+        plot.title = element_text(vjust = 2, size = 20, face = "bold"),
+        plot.background=element_rect(fill="transparent",colour=NA))
+p <- ggplot(data=economics, aes(date, unemploy/pop)) + geom_line()
+yrng <- range(economics$unemploy/economics$pop)
+p + geom_rect(inherit.aes=FALSE, aes(xmin=start, xmax=end, fill=party),
+              ymin=yrng[1], ymax=yrng[2], data=presidential[-c(1:2),]) +
+    scale_fill_manual(values=alpha(c("blue", "red"), 0.2)) +
+  geom_text(aes(x=start, y=rep(I(yrng[2]),8),
+  label=name), data=presidential[-c(1,2),], hjust=0, vjust=rep(c(-.4,1),4),
+  size=5) + labs(title="Unemployment in the U.S. (1967-2007)",
+x = "Year (observations are monthly)",
+y = "Unemployment Rate - Total Unemployed / U.S. Population") +
+  scale_x_date(labels = date_format("%Y"), breaks = date_breaks("4 years")) + my_theme
+```
+
+
+## Fonts
+
+- sdfsdf
+- sdf
+- sdf
+- sdf
+
+
+## Leaflet for R {.flexbox .vcenter}
+
+https://rstudio.github.io/leaflet/
+
+one of the most popular open-source JavaScript libraries for interactive maps.
+
+## Theme Elements {.smaller}
+
+- The `theme()` function can take more than 40 arguments to customize appearance
+- Fall into four main categories:
+    + `line` - any lines: axes, tick marks, gridlines
+    + `rect` - any rectangles: backgrounds, borders, legend box
+    + `text` - any text: axis labels, legend labels
+    + `title` - any title: axis title, plot title, legend title
+- Use one of four functions to change theme elements:
+    + `element_blank()`
+    + `element_line()`
+    + `element_rect()`
+    + `element_text()`
+- See [documentation](http://docs.ggplot2.org/current/theme.html) for detail and full list of options
+- `theme_classic()` or `theme_bw()` overrides `theme()`
+
+## Basic Usage
+
+You create a Leaflet map with these basic steps:
+
+Create a map widget by calling leaflet().
+Add layers (i.e., features) to the map by using layer functions (e.g. addTiles, addMarkers, addPolygons) to modify the map widget.
+Repeat step 2 as desired.
+Print the map widget to display it.
+
+
+
+
+
+

@@ -1,0 +1,198 @@
+---
+title: "地圖視覺化 -- Leaflet"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center')
+```
+
+本範例需要的套件
+
+```{r}
+suppressPackageStartupMessages({
+library(leaflet) # map
+library(ggmap) # map
+library(googleVis) # map
+library(httr)  # crawler
+library(rvest) # crawler
+library(XML)   # crawler
+library(stringr) # string manipulation
+library(data.table) # ETL
+})
+```
+
+
+## Basic Usage
+
+```{r}
+library(leaflet)
+map <- leaflet() %>%
+  setView(lng = 121.5475516, lat = 25.0439346, zoom = 13) %>% # 設定地圖中心點
+  addTiles() %>%  # 加上預設的底圖 layer (OpenStreetMap)
+  addMarkers(lng = 121.5475516, lat = 25.0439346, popup="訊息方塊tooltips")
+map
+```
+
+與 `ggplot2` 不同的是，`leaflet` 使用 `magrittr` 的 `%>%` pipe operator 來增加圖層 (layer)，因為`leaflet` 的函數是 modified by reference。我們一樣可以一層一層地把需要的元素加上去。
+查詢詳細使用方式可直接 `?addControl`
+
+跟 `ggplot2` 一樣有很多 geom 可以選，幾個常用的 function: 
+
+- addTiles: 底圖，預設是 OpenStreetMap，可用`addProviderTiles()`加入不同
+[底圖來源](http://leaflet-extras.github.io/leaflet-providers/preview/index.html)
+- addPopups: Popups
+- addMarkers: 標記
+- addCircles: 圓
+- addPolylines: 線條
+- addRectangles: 方框
+- addPolygons: 多邊形，通常用的資料是 shape file
+- addGeoJSON: 如果有 GeoJSON 的資料格式就可以直接加圖層
+
+可以把不同底圖圖層堆疊
+
+```{r}
+m <- leaflet() %>% setView(lng = 121.5475516, lat = 25.0439346, zoom = 13)
+m %>% addProviderTiles("CartoDB.PositronNoLabels") %>% # base map
+  addProviderTiles("Stamen.TonerLines",
+    options = providerTileOptions(opacity = 0.35) # street lines
+  ) %>%
+  addProviderTiles("Stamen.TonerLabels") # labels
+```
+
+## Application
+
+### 爬蟲抓取店家地址
+
+先來寫一隻 7-11 爬蟲抓店家地址：
+
+>（想知道爬蟲怎麼寫的同學歡迎加入木刻思爬蟲課
+> [Waiting List](#)）
+
+```{r}
+library(httr)
+library(rvest)
+library(XML)
+library(data.table)
+library(stringr)
+get711 <- function() {
+  url <- "http://emap.pcsc.com.tw/EMapSDK.aspx"
+  res <- GET(url,
+             query = list(
+               commandid = "SearchStore",
+               StoreName = "%"
+             ))
+  res_xml <- res %>% 
+    content(encoding = "UTF-8") %>%
+    XML::xmlParse(encoding = "UTF-8", options = XML::HUGE) %>% 
+    .['//GeoPosition']
+  dt_711 <- res_xml %>% 
+    XML::xmlToDataFrame(stringsAsFactors = FALSE) %>% 
+    as.data.table()
+  
+  ## Data cleansing
+  dt_711[
+    , c("X", "Y") := lapply(.SD, 
+                            function(x) {
+                              as.numeric(as.character(x))*10^(-6)
+                            }), 
+    .SDcols = c("X", "Y")]
+  
+  ## add brand name, keyword
+  dt_711[, `:=`(brand_nm = "統一超商", keyword = "7-11")]
+  
+  ## rename variables
+  setnames(dt_711, 
+           c("Address", "POIName", "Telno", "X", "Y"),
+           c("addr", "store_nm", "tel_no", "lon_x", "lat_y"))
+  
+  # names(dt_711) %>% str_replace_all("([a-z])([A-Z])", "\\1_\\L\\2")
+  names(dt_711) <- names(dt_711) %>% 
+    str_replace_all("([a-z])([A-Z])", "\\1_\\2") %>% 
+    str_to_lower()
+  
+  ## add url, time, key
+  try({setnames(dt_711,"is7wi_fi", "is_7wifi")}, silent = T)
+  dt_711[, store_url := "http://emap.pcsc.com.tw/emap.aspx"]
+  dt_711[, data_time := format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")]
+  dt_711[, full_nm := paste0(brand_nm, store_nm)]
+  
+  
+  ## move brand_nm, key_word to first two colmuns
+  setcolorder(dt_711, c("full_nm", "brand_nm", "keyword", "store_nm", "addr",
+                        setdiff(names(dt_711), c("full_nm", "brand_nm", "keyword", "store_nm", "addr"))))
+  
+  dt_711
+}
+```
+
+
+### 爬取資料
+
+```{r}
+stores_dt <- get711()
+```
+
+### ETL
+
+```{r, collapse=TRUE, comment = "#>"}
+## 先篩選出 "台北市大安區" 的門市，以及需要的 variables
+tp_stores <- stores_dt[str_detect(addr, "^台北市大安區"),
+                       .(brand_nm, lon_x, lat_y, tel_no, addr)]
+
+## prepare some meta information
+tp_stores[, `:=`(latlon = paste0(lat_y,":",lon_x),
+                 tips = sprintf("<p>%s</p><p>%s</p><p>%s</p>",
+                                brand_nm, tel_no, addr))]
+head(tp_stores)
+```
+
+### 用 `leaflet` 畫地圖
+
+```{r}
+## Plot with leaflet
+leaflet(data = tp_stores, height = 600, width = "auto") %>% 
+  addTiles() %>%  # 加上預設的地圖資料
+  addMarkers(~lon_x, ~lat_y, 
+             popup = ~as.character(tips),
+             icon = list(iconUrl = "img/pc_logo.gif",
+                         iconSize = c(20, 20)))
+```
+
+
+### 用 googleViz 畫地圖
+
+```{r, results='asis'}
+library(googleVis)
+gmap <- gvisMap(tp_stores, 
+                "latlon", "tips",
+                options = list(showTip=TRUE, 
+                               enableScrollWheel=T,
+                               height=600,
+                               useMapTypeControl=T,
+                               mapType='normal'))
+```
+```{r, eval=FALSE}
+if (.Platform$OS.type == "windows") {
+  gmap$html$header = gsub("utf-8", "Big5", gmap$html$header)
+}
+plot(gmap)
+```
+
+```{r, echo=FALSE, results='asis'}
+print(gmap, "chart")
+```
+
+
+## Refernce
+
+- https://rstudio.github.io/leaflet/
+- http://spatial.ly/r/

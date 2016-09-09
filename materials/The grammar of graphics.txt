@@ -1,0 +1,44 @@
+# http://www.r-bloggers.com/the-grammar-of-graphics-l-wilkinson/
+
+The author suggests to describe a statistical plot in
+several consecutive steps: data, transformation, scale,
+coordinates, elements, guides, display. The “data” part
+performs the actual statistical computations — it has to be
+part of the graphics pipeline if you want to be able to
+interactively control those computations, say, with a slider
+widget. The transformation, scale and coordinate steps,
+which I personnally view as a single step, is where most of
+the imagination of the plot designer operates: you can
+naively plot the data in cartesian coordinates, but you can
+also transform it in endless ways, some of which will shed
+light on your data (more examples below). The elements are
+what is actually plotted (points, lignes, but also
+shapes). The guides are the axes, legends and other elements
+that help read the plot — for instance, you may have more
+than two axes, or plot a priori meaningful lines (say, the
+first bissectrix), or complement the title with a picture (a
+“thumbnail”). The last step, the display, actually produces
+the picture, but should also provide interactivity
+(brushing, drill down, zooming, linking, and changes in the
+various parameters used in the previous steps).
+
+In the course of the book, the author introduces many
+notions linked to actual statistical practice but too
+often rejected as being IT problems, such as data mining,
+KDD (Knowledge Discovery in Databases); OLAP, ROLAP,
+MOLAP, data cube, drill-down, drill-up; data streams;
+object-oriented design; design patterns (dynamic plots
+are a straightforward example of the “observer pattern”);
+eXtreme Programming (XP); Geographical Information
+Systems (GIS); XML; perception (e.g., you will learn that
+people do not judge quantities and relationships in the
+same way after a glance and after lengthy considerations),
+etc. — but they are only superficially touched upon,
+just enough to wet your apetite.
+
+If you only remember a couple of the topics developped in
+the book, these should be: the use of non-cartesian coordinates and,
+more generally, data transformations;
+scagnostics; data patterns, i.e., the meaningful reordering of
+variables and/or observations.
+

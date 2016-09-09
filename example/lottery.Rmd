@@ -1,0 +1,281 @@
+---
+title: "Plot Lottery"
+author: Leo Lu
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: yes
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center')
+```
+
+ (Inherited the work by <a href="https://github.com/whizzalan">George Chao</a>)
+
+本範例需要的套件
+
+```{r, message=FALSE}
+library(magrittr)
+library(readr)
+library(data.table)
+library(dplyr)
+library(dtplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+```
+
+## Data
+
+### Download the Data
+
+```{r, eval=FALSE}
+dir.create("data", showWarnings = FALSE, recursive = TRUE)
+download.file("https://raw.githubusercontent.com/datasci-info/JihSunRBasic20160724/gh-pages/3_RViz_201608/data/lottery_utf8.csv?token=AIV30aRvlYfgHvWfe60M34FbUEtURVoUks5XxZ3qwA%3D%3D", destfile = "data/lottery_utf8.csv")
+```
+
+
+### Data Cleansing
+
+```{r}
+lottery_raw <- read_csv("data/lottery_utf8.csv", 
+                    locale = locale(encoding = "UTF-8"),
+                    col_types = cols(.default = "c")) %>% 
+  select(-c(3,29:33)) %>%  # exclude `兌獎截止`
+  tbl_dt
+raw_names <- names(lottery_raw)
+lottery <- lottery_raw %>% 
+  setNames(c("period", "date", "sales", "total_rewards", 
+             paste0("n",1:6), "s", 
+             sprintf("n_%s_prize", 1:8),
+             sprintf("money_%s_prize", 1:8))) %>% 
+  separate(date, into = c("year", "mm", "dd")) %>% 
+  mutate(year = as.integer(year)+1911) %>% 
+  unite(date, year, mm, dd, sep="-", remove=TRUE) %>% 
+  mutate(date = as.Date(date))
+int_cols <- names(lottery) %>% grep("^n_", ., value =  TRUE)
+num_cols <- names(lottery) %>% grep("^money|rewards|sales", ., value =  TRUE)
+lottery[, (int_cols) := lapply(.SD, as.integer), .SDcols = int_cols][
+  , (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
+lottery <- lottery %>% tbl_df
+```
+```{r, echo=FALSE}
+data_frame(variables = names(lottery), detail = raw_names) %>% knitr::kable()
+DT::datatable(lottery)
+```
+
+
+
+## EDA
+
+### 每期頭獎人數分布
+
++ Issue: 我想知道頭獎最多幾個人分走惹？沒開出頭獎的期數多嗎？
++ Variables
+    - n_1_prize
++ Geoms
+    - maybe `bar chart`. Since it's a ordered variable.
++ Mapping
+    - x: n_1_prize
+    - y: count **期數** (n rows) by n_1_prize  
+
+```{r}
+d <- lottery %>% 
+  group_by(n_1_prize) %>% 
+  summarise(n = n())
+d
+ggplot(d, aes(n_1_prize, n)) +
+  geom_bar(stat = "identity") +
+  ggtitle("How Many People Share My Money?") +
+  xlab("Num of First Prize (People)") +
+  ylab("")
+```
+
+
+### 月份銷售總額
+
++ Issue: 今天如果你是中信員工，老闆想了解大樂透總體營運情況，看大樂透月份銷售總額？
++ Variables
+    - date
+    - sales
++ Geoms
+    - maybe `bar chart` or  `line chart`? Since it's a continuous variable.
++ Mapping
+    - x: date
+    - y: sum sales by month
+
+```{r}
+d <- lottery %>% 
+  mutate(month = floor_date(date, "month")) %>% 
+  group_by(month) %>% 
+  summarise(total_sales_M = sum(sales/1000000))
+d
+ggplot(d, aes(x = month, total_sales_M)) +
+  geom_bar(stat = "identity") +
+  scale_x_date(date_breaks = "3 month", date_labels = "'%y-%m") +
+  ggtitle("Total Sales of Lotto649")
+```
+
+### 總獎金
+
++ Issue: 想知道大樂透的歷史買氣如何？現在算多人買嗎？
++ Variables
+    - total_rewards
+    - date
++ Geoms
+    - maybe `bar chart` or  `line chart`? Since it's a continuous variable.
++ Mapping
+    - x: date
+    - y: total_rewards
+
+```{r}
+ggplot(lottery, aes(x = date, y = total_rewards)) +
+  geom_bar(stat = "identity") +
+  scale_x_date(date_breaks = "3 month", date_labels = "'%y-%m") +
+  ggtitle("Total Rewards of Lotto649")
+```
+
+### 每個月總獎金與頭獎獎金
+
++ Issue: 每個月總獎金熱度為何？頭獎有多幸運呢？
++ Variables
+    - total_rewards
+    - money_1_prize
+    - date -> month
++ Geoms
+    - maybe `dot chart`, `line chart`
++ Mapping
+    - x: month (calculated from date)
+    - y: sum total_rewards by month
+    - y: dollars
+    - facet: variables(sum money_1_prize, sum total_rewards by month)
+
+```{r, collapse=TRUE}
+d <- lottery %>% 
+  mutate(month = floor_date(date, "month")) %>% 
+  group_by(month) %>% 
+  summarise(sum_total_rewards_M = sum(total_rewards)/1000000, 
+            sum_money_1_prize_M = sum(money_1_prize)/1000000) %>% 
+  gather(variables, dollars_million, -month)
+d
+
+ggplot(d, aes(x = month, y = dollars_million, color = variables)) +
+  geom_bar(stat = "identity") +
+  facet_wrap( ~ variables, ncol = 1, scales = "free_y") +
+  scale_x_date(date_breaks = "6 month", date_labels = "%Y-%m") +
+  theme(legend.position = "top") +
+  ggtitle("Total Rewards & Single First Prize")
+```
+
+### 每期總獎金與頭獎人數
+
++ Issue: 每期總獎金高頭獎就分得多嗎？有多少人跟我分頭獎？
++ Variables
+    - total_rewards
+    - money_1_prize
+    - date -> month
++ Geoms
+    - maybe `dot chart` with color hue
++ Mapping
+    - x: total rewards
+    - y: money_1_prizes
+    - y: sum money_1_prize by month
+
+
+```{r}
+d <- lottery %>% 
+  select(total_rewards, money_1_prize, n_1_prize) %>% 
+  mutate_at(vars(total_rewards, money_1_prize), funs(M = ./1000000))
+d
+ggplot(d, aes(x = total_rewards_M, y = money_1_prize_M, color = factor(n_1_prize))) +
+  geom_point(shape = 1, size = 2, stroke = 1) +
+  scale_color_discrete(name = "N First Prize") +
+  ggtitle("Total Rewards & Single First Prize with N")
+```
+
+
+### 號碼的「冷度」
+
++ Issue: 有哪些號碼是很久沒開了？幾期沒開了？「冷度」如何？
++ Variables
+    - period
+    - numbers
+    - 累計沒開期數
++ Geoms
+    - maybe `heatmap` with color hue
++ Mapping
+    - x: period
+    - y: numbers
+    - color hue: 累計沒開期數
+
+```{r, fig.width=10, fig.asp=0.75, dev='CairoSVG'}
+library(dplyr)
+library(RColorBrewer)
+rle_seq <- function(x) {
+  # x <- c(0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0)
+  rle_df <- rle(x) %>% unclass() %>% as.data.frame()
+  
+  # lengths <- rle_list$lengths
+  # values <- rle_list$values
+  # 
+  # zero_pos <- which(values == 0)
+  # one_pos <- which(values == 1)
+  # 
+  # n_zeros <- lengths[zero_pos]
+  # n_ones <- lengths[one_pos]
+  # 
+  # seq(zeros[1], 1, -1)
+  # seq(zeros[2], 1, -1)
+  # seq(zeros[3], 1, -1)
+  # 
+  # rep(0, ones[1])
+  # rep(0, ones[2])
+  # 
+  # expected_result <- c(2, 1, 0, 0, 3, 2, 1, 0, 0, 0, 2, 1)
+  
+  rle_df <- rle_df %>% 
+    rowwise() %>% 
+    mutate(rle_seq = ifelse(values == 0, list(seq(lengths, 1, -1)),
+                            list(rep(0, lengths))))  
+  rle_df$rle_seq %>% unlist(use.names = FALSE)
+}
+# 對應到號碼關係
+lottery_m <- lottery %>% 
+  select(1,n1:s) %>%
+  gather(key = var, value = val, n1:s) %>% 
+  select(-var) %>%
+  mutate(YesNo = 1) %>%
+  spread(key = val, value = YesNo, fill=0) %>% 
+  arrange(desc(period))
+
+# 距離多久沒開出來
+# rle_seq(lottery_m$`01`)
+d <- lottery_m %>%
+  filter(period >= "105000001") %>% 
+  mutate_at(vars(-contains("period")), rle_seq) %>% 
+  gather(number, rle, -period)
+
+breaks <- seq(d$period %>% as.integer() %>% min,
+              d$period %>% as.integer() %>% max,
+              10)
+
+ggplot(d, aes(x = factor(period),
+              y = factor(number, rev(levels(factor(number)))),
+              fill = rle)) +
+  geom_tile(colour="white", size = 0.5) +
+  scale_fill_gradientn(name = "Non-open Periods", colours = brewer.pal(5, "YlGnBu"), guide = "legend") +
+  geom_tile(data = d %>% filter(rle == 0),
+            fill = "grey", colour = "white", size = 0.5) +
+  scale_x_discrete(breaks = breaks) +
+  theme(legend.position="top") +
+  ylab("Numbers") +
+  xlab("Period") +
+  ggtitle("Lottery 49/6 Coolness")
+```
+

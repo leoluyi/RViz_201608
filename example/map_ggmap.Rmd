@@ -1,0 +1,67 @@
+---
+title: "Plotting Map -- ggmap"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center')
+```
+
+本範例需要的套件
+
+```{r}
+library(httr)
+library(rvest)
+library(jsonlite)
+library(dplyr)
+library(ggmap)
+library(leaflet)
+```
+
+## Get Data
+
+- [紫外線即時監測資料](http://data.gov.tw/node/6076)
+- [API](http://opendata.epa.gov.tw/ws/Data/UV/?format=json)
+
+```{r}
+res <- GET("http://opendata.epa.gov.tw/ws/Data/UV/?format=json")
+uv_df <- res %>% 
+  content(as = "text") %>%
+  fromJSON() %>%
+  tbl_df()
+
+gis_conv <- function(x) {
+  # x = uv_df$WGS84Lon
+  x_split <- strsplit(as.character(x), ",")
+  sapply(x_split, function(v) {
+    v <- as.numeric(v)
+    v[1] + v[2]/60 + v[3]/3600
+  })
+}
+
+uv_df <- uv_df %>% 
+  mutate(UVI = as.numeric(UVI)) %>% 
+  mutate(lon = gis_conv(WGS84Lon),
+         lat = gis_conv(WGS84Lat))
+```
+
+
+## ggmap
+
+```{r}
+library(ggmap)
+map <- get_map(location = "Taiwan", 
+               maptype = "roadmap", 
+               zoom = 7)
+ggmap(map) + 
+  geom_point(aes(x = lon, y = lat, size = UVI), data = uv_df)
+```
+

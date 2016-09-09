@@ -1,0 +1,143 @@
+---
+title: "Visualization: Part vs. All"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: tactile
+    highlight: vignette
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align = 'center',
+                      collapse = TRUE)
+```
+
+本範例需要的套件
+
+```{r, message=FALSE}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(nycflights13)
+```
+
+## Backgound
+
+```{r}
+library(ggplot2)
+ggplot(iris, aes(x = Sepal.Width)) +
+  geom_histogram()
+```
+
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, fill = Species)) +
+  geom_histogram()
+```
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width)) +
+  geom_histogram() +
+  facet_wrap(~ Species)
+```
+
+## Part vs. All 起手式
+
+```{r, eval=FALSE}
+ggplot(data = <full_data_frame>, aes(...)) +
+  geom_(data = <data_frame_without_grouping_var>, colour/fill = "neutral_color") +
+  geom_() +
+  facet_wrap(~ grouping_var)
+```
+
+## 應用在剛才的 iris histogram
+
+```{r}
+d <- iris        # Full data set
+d_bg <- d %>% select(-Species) # Background Data - full without the 5th column (Species)
+
+ggplot(d, aes(x = Sepal.Width)) +
+  geom_histogram(data = d_bg, fill = "grey") +
+  geom_histogram() +
+  facet_wrap(~ Species) +
+  theme_light()
+```
+
+用顏色強調類別間的差異
+
+```{r}
+d <- iris        # Full data set
+d_bg <- d[, -5]  # Background Data - full without the 5th column (Species)
+
+ggplot(d, aes(x = Sepal.Width)) +
+  geom_histogram(data = d_bg, fill = "grey", alpha = .5) +
+  geom_histogram(aes(x = Sepal.Width, fill = Species), colour = "black") +
+  facet_wrap(~ Species) +
+  guides(fill = FALSE) +  # to remove the legend
+  theme_light()              # for clean look overall
+```
+
+
+## Points
+
+```{r}
+ggplot(d, aes(x = Sepal.Width, y = Sepal.Length)) +
+  geom_point(data = d_bg, colour = "grey") +
+  geom_point() + 
+  facet_wrap(~ Species)
+```
+
+```{r}
+ggplot(d, aes(x = Sepal.Width, y = Sepal.Length, colour = Species)) +
+  geom_point(data = d_bg, colour = "grey", alpha = .2) +
+  geom_point() + 
+  facet_wrap(~ Species) +
+  guides(colour = FALSE) +
+  theme_light()
+```
+
+## Map
+
+```{r, dev='CairoPNG'}
+library(nycflights13)
+library(dplyr)
+library(readr)
+
+usa_map <- map_data("usa")
+
+airports <- read_csv("https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat", col_names = FALSE) %>% 
+  select(5, 7, 8) %>% 
+  setNames(c("code", "lat", "long"))
+orig <- airports %>% dplyr::rename(origin = code, long_o = long, lat_o = lat)
+dest <- airports %>% dplyr::rename(dest = code, long_d = long, lat_d = lat)
+
+d <- flights %>%
+       left_join(orig, by = "origin") %>% 
+       left_join(dest, by = "dest") %>% 
+       filter(carrier %in% c("AS", "F9", "OO", "YV", "VX", "FL"))
+
+d_bg <- d %>% select(-carrier) # remove carrier so that won't facet by carrier
+
+ggplot() +
+  geom_polygon(inherit.aes = FALSE,
+               data = usa_map, aes(long, lat, group = region)) + # map layer
+  aes(x = long_o, y = lat_o, xend = long_d, yend = lat_d) +
+  geom_segment(data = d_bg, colour = "grey", alpha = .7) + # bg line-seg layer
+  geom_segment(data = d, aes(colour = carrier)) + # facet line-seg layer
+  facet_wrap(~ carrier) +
+  coord_quickmap() +
+  guides(colour = FALSE) +
+  ggtitle("NYC Flights by Carriers") +
+  theme_minimal()
+```
+
+
+## Reference
+
+- [R-bloggers - Plotting background data for groups with ggplot2](https://www.r-bloggers.com/plotting-background-data-for-groups-with-ggplot2/)
+

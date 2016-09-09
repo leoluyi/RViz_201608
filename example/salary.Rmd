@@ -1,0 +1,33 @@
+---
+title: "Salary""
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center')
+```
+
+本範例需要的套件
+
+```{r, message=FALSE}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+
+## Data Source
+
+- [行政院主計總處-薪資及生產力統計資料](http://www.dgbas.gov.tw/ct.asp?xItem=1135&ctNode=3253)
+- [行政院主計總處-消費者物價基本分類指數](http://win.dgbas.gov.tw/dgbas03/latestind-pca.asp?i=21)
+
+

@@ -1,0 +1,55 @@
+---
+title: "Raster Map"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center')
+```
+
+本範例需要的套件
+
+```{r}
+library(raster) # getData()
+```
+
+## Raster + Leaflet
+
+```{r}
+tw <- getData("GADM", country="TW", level=2)
+#arbitrary data (code from above)
+tw$randomData <- rnorm(n=nrow(tw), 150, 30)
+
+#create a color palette to fill the polygons
+pal <- colorQuantile("Greens", NULL, n = 10)
+
+#create a pop up (onClick)
+polygon_popup <- paste0("<strong>Name: </strong>", tw$NL_NAME_2, "<br>",
+                        "<strong>Indicator: </strong>", round(tw$randomData,2))
+
+#create leaflet map
+map <- leaflet() %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  # setView(-98.35, 39.7, zoom = 4) %>% 
+  addPolygons(data = tw, 
+              fillColor= ~pal(randomData),
+              fillOpacity = 0.4, 
+              weight = 2, 
+              color = "white",
+              popup = polygon_popup)
+map
+```
+
+
+## Reference
+
+- http://www.gis-blog.com/create-a-leaflet-map-using-r/
+- https://blog.gtwang.org/r/r-ggmap-package-spatial-data-visualization/3/

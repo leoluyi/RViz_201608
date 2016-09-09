@@ -1,0 +1,90 @@
+---
+title: "Gapminder"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+
+
+```{r, message=FALSE}
+# Standard data manipulation and visulisation
+library(dplyr)
+library(ggplot2)
+
+# Tools for working with models
+# devtools::install_github("hadley/modelr")
+library(modelr)
+
+# Tools for working with lots of models
+library(purrr)
+library(tidyr)
+
+# Data
+library(gapminder)
+```
+
+## Data
+
+We can take a quick peak at the loaded `gapminder` object:
+
+This package provides a subset of the data provided by
+
+[Gapminder](http://www.gapminder.org/data/). The data comes as a data frame
+(or `tbl_df` if you're using `dplyr`). We can visit [Gapminder.org
+documentation page](http://www.gapminder.org/data/documentation/) to obtain
+information about the columns:
+
+| variable  | meaning                  |
+|:----------|:-------------------------|
+| country   |                          |
+| continent |                          |
+| year      |                          |
+| lifeExp   | life expectancy at birth |
+| pop       | total population         |
+| gdpPercap | per-capita GDP           |
+
+```{r}
+library(gapminder)
+gapminder
+```
+
+## Plot Data
+
+```{r}
+gapminder %>% 
+  ggplot(aes(year, lifeExp, group = country)) +
+    geom_line(alpha = 1/3)
+```
+
+
+## Plot Models
+
+```{r}
+nz <- filter(gapminder, country == "New Zealand")
+nz %>% 
+  ggplot(aes(year, lifeExp)) + 
+  geom_line() + 
+  ggtitle("Full data = ")
+
+nz_mod <- lm(lifeExp ~ year, data = nz)
+nz %>% 
+  add_predictions(nz_mod) %>%
+  ggplot(aes(year, pred)) + 
+  geom_line() + 
+  ggtitle("Linear trend + ")
+
+nz %>% 
+  add_residuals(nz_mod) %>% 
+  ggplot(aes(year, resid)) + 
+  geom_hline(yintercept = 0, colour = "white", size = 3) + 
+  geom_line() + 
+  ggtitle("Remaining pattern")
+```
+
+## Refernce
+
+- [Hadley: r4ds](http://r4ds.had.co.nz/many-models.html)

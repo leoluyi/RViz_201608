@@ -1,0 +1,70 @@
+---
+title: "R Installation Guide"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+## R
+
+### Windows
+
+Download and install R base and Rtools.
+
+- https://cran.rstudio.com/bin/windows/base/
+- https://cran.rstudio.com/bin/windows/Rtools/
+
+### Mac
+
+Download R-x.x.x.pkg and install it.
+
+- https://cran.r-project.org/bin/macosx/
+
+You may need to install libxml2 with [Homebrew](http://brew.sh/):
+
+```bash
+brew install libxml2
+```
+
+### Linux
+
+- [Ubuntu](https://cran.r-project.org/bin/linux/ubuntu/README.html)
+- [Red Hat](https://cran.r-project.org/bin/linux/redhat/README)
+
+You may need install some system libraries for our R packages.
+Here we only take Ubuntu as example.
+
+Curl:
+
+```bash
+sudo apt-get install curl libcurl4-openssl-dev
+```
+
+XML:
+```bash
+sudo apt-get install libxml2-dev
+```
+
+
+## RStudio
+
+Download and install RStudio desktop.
+
+- https://www.rstudio.com/products/rstudio/download/
+
+
+## Packages required in the course
+
+Open R console and execute following code:
+
+```{r}
+## === install required packages ===
+pkg_list <- c("magrittr", "dplyr", "tidyr", "data.table", "ggplot2",
+              "readr", "lubridate", "extrafont", "ggrepel")
+pkg_new <- pkg_list[!(pkg_list %in% installed.packages()[,"Package"])]
+if(length(pkg_new)) install.packages(pkg_new)
+rm(pkg_new, pkg_list)
+```
+
