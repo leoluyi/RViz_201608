@@ -567,6 +567,7 @@ print(mpg)
 
 ```{r, echo=FALSE, message=FALSE, fig.width=8, fig.asp=0.5}
 library(cowplot)
+theme_set(theme_light()) 
 p1 <- ggplot(data = mpg) +
   geom_point(mapping = aes(x = displ, y = hwy))
 p2 <- ggplot(data = mpg) +
@@ -654,16 +655,16 @@ mpg %>%
 <img src="img/mpg-table-viz.png" style="height:540px; max-width:100%;">
 
 
-## Try Bar Charts
+<!-- ## Try Bar Charts -->
 
-- 填滿顏色 `fill`
+<!-- - 填滿顏色 `fill` -->
 
-(錯誤示範：不建議同一變數 mapping 多個 aes)
+<!-- (錯誤示範：不建議同一變數 mapping 多個 aes) -->
 
-```{r}
-ggplot(data = mpg) +
-  geom_bar(mapping = aes(x = class, fill = class))
-```
+<!-- ```{r} -->
+<!-- ggplot(data = mpg) + -->
+<!--   geom_bar(mapping = aes(x = class, fill = class)) -->
+<!-- ``` -->
 
 ## Stats (Geom 的一體兩面)
 
@@ -675,7 +676,7 @@ ggplot(data = mpg) +
 > 每個成功的 **Geom** 背後都有一個偉大的 **Stat**
 
 
-## stat = "identity"
+## stat = "identity" (不轉換)
 
 <img src="img/visualization-stat-point.png" style="height:520px; max-width:100%;">
 
@@ -745,7 +746,8 @@ ggplot(data = d) +
 ## 沒有排序的 bar chart 很難看
 
 - 要怎麼排序？
-- `reorder(<要排序的變數>, <參照大小>)`
+- `reorder(<要排序的變數>, <參照大小>)`  
+  ＊只能用在手動算的方式
 
 ```{r, collapse=TRUE, fig.width=6}
 d <- mpg %>% 
@@ -996,7 +998,7 @@ ggplot(data = mpg) +
 hint: 
 
 - `dplyr::group_by(xxx, xxx)`
-- `dplyr::summarise(mean_price_per_carat = mean(xxx))`  
+- `dplyr::summarise(mean_hwy = mean(xxx))`  
 - `geom_bar(stat = "identity")`
 - `facet_wrap()`
 
@@ -1035,6 +1037,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   geom_smooth() + 
   ggtitle("Fuel efficiency vs. Engine size")
 ```
+
 
 ### 標題 + 座標軸
 
@@ -1183,10 +1186,8 @@ ggsave(device = "png", type = "cairo")`
 `scale_x_continuouts()`
 `scale_x_discrete()`
 
-```{r}
-
-```
-
+- breaks: 刻度向量
+- labels: `scales` 套件 (千分位, 錢號, 日期)
 
 ## Scales -- 日期座標
 
@@ -1200,14 +1201,13 @@ ggsave(device = "png", type = "cairo")`
 # 美國總統資料
 presidential
 
-library(ggrepel)
 presidential %>%
   mutate(id = 33 + row_number()) %>% # id: 屆數
   ggplot(aes(start, id)) +
     geom_point() +
     geom_segment(aes(xend = end, yend = id)) +
     scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
-  ggrepel::geom_text_repel(label = Name)
+  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2)
 ```
 
 
@@ -1253,15 +1253,18 @@ library(RColorBrewer)
 display.brewer.all()
 ```
 
-## Scale Color and Fill -- 連續型
+
+## Scale Color and Fill -- Manual (手動填色)
 
 ```{r}
 presidential %>%
   mutate(id = 33 + row_number()) %>%
   ggplot(aes(start, id, colour = party)) +
-    geom_point() +
-    geom_segment(aes(xend = end, yend = id)) +
-    scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue"))
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue")) +
+  scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
+  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2)
 ```
 
 
@@ -1288,7 +1291,7 @@ Sometimes labeling on dots is not an easy work when plottng, especially when you
 
 - use `geom_text_repel()` instead of `geom_text()`
 
-```{r, echo=FALSE, fig.asp=0.5}
+```{r, echo=FALSE, fig.asp=0.4, fig.width=8}
 library(ggplot2)
 library(ggrepel)
 library(cowplot)
@@ -1333,8 +1336,8 @@ ggplotly(p)
 Excercise: 請把下面的圖變成動態圖表
 
 ```{r}
-p <- ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
-  geom_point()
+p <- ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, color = class))
 ```
 
 
@@ -1343,35 +1346,13 @@ library(plotly)
 ggplotly(p)
 ```
 
-## Map 畫地圖 { .smaller }
-
-<a href="http://xkcd.com/1138/">
-<img src="img/xkcd-heatmap.png"" style="height:4; m80pxax-width:100%;">
-</a>
-
-[Data Man](https://www.facebook.com/imDataMan/photos/a.1703493919929567.1073741828.1703467299932229/1744422419170050/?type=3)【畫地圖時最需要注意的地方：人口密度可能欺騙眼睛】
-
-在畫地圖的時候，最需要記得的一件事是：人口密度高的地方，發生某種事件的次數應該也會高。比方說，我們要畫全台灣的寵物走失地圖，因為台北市人口密度高，因此每單位面積寵物隻數，理當比苗栗縣來得高（先不考慮台北市和苗栗縣民誰比較愛養寵物），因此寵物走失的隻數應該也會比較多。
-
-如果把寵物走失密度化成地圖，就會出現台北市的顏色很深，苗栗顏色較淺的情況。但這並不代表台北市的寵物比較容易走失，只是反映兩地的人口密度不同。不過，較沒經驗的繪圖者和讀者，可能就會從這張地圖得出「台北市寵物比較容易走失」的結論，犯下我們今天分享的漫畫中的人一樣的錯誤。
-
-因此，在繪製密度地圖的時候，一定要先想到：我們利用的數據跟人口密度有無相關性，有的話，要怎麼排除人口密度的影響，才能從地圖中找出數據真正埋藏的故事。
-
-[Example](example/map_leaflet.html)
-
-## 視覺化應用
-
-- [Example: 樂透資料](example/lottery.html)
-
-
 # 報告製作
-
 
 ## RMarkdown
 
 **終極應用**：一條龍用 R 做報告
 
-![]("img/prettydoc_cayman.png")
+![](img/prettydoc_cayman.png)
 
 ## RMarkdown
 
@@ -1402,7 +1383,30 @@ ggplotly(p)
 
 一起動手來做一份報告
 
-[Example: 資料新聞--台灣實質收入](#)
+[Example: 資料新聞--台灣實質收入](example/salary.html)
+
+
+## 視覺化應用
+
+- [Example: 樂透資料](example/lottery.html)
+
+## Map 畫地圖 { .smaller }
+
+[Example: 地圖視覺化 – Leaflet](example/map_leaflet.html)
+
+<a href="http://xkcd.com/1138/">
+<img src="img/xkcd-heatmap.png"" style="height:4; m80pxax-width:100%;">
+</a>
+
+[Data Man](https://www.facebook.com/imDataMan/photos/a.1703493919929567.1073741828.1703467299932229/1744422419170050/?type=3)【畫地圖時最需要注意的地方：人口密度可能欺騙眼睛】
+
+在畫地圖的時候，最需要記得的一件事是：人口密度高的地方，發生某種事件的次數應該也會高。比方說，我們要畫全台灣的寵物走失地圖，因為台北市人口密度高，因此每單位面積寵物隻數，理當比苗栗縣來得高（先不考慮台北市和苗栗縣民誰比較愛養寵物），因此寵物走失的隻數應該也會比較多。
+
+如果把寵物走失密度化成地圖，就會出現台北市的顏色很深，苗栗顏色較淺的情況。但這並不代表台北市的寵物比較容易走失，只是反映兩地的人口密度不同。不過，較沒經驗的繪圖者和讀者，可能就會從這張地圖得出「台北市寵物比較容易走失」的結論，犯下我們今天分享的漫畫中的人一樣的錯誤。
+
+因此，在繪製密度地圖的時候，一定要先想到：我們利用的數據跟人口密度有無相關性，有的話，要怎麼排除人口密度的影響，才能從地圖中找出數據真正埋藏的故事。
+
+
 
 # Reference
 
