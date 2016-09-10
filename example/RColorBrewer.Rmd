@@ -1,0 +1,139 @@
+---
+title: "Color palette with ggplot and RColorBrewer"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+
+```{r setup, include=FALSE}
+# set root dir when rendering
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center',
+                      collapse = TRUE)
+```
+
+本範例需要的套件
+
+```{r, message=FALSE}
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+```
+
+## 玩玩顏色
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+
+data(mpg)
+mpg
+
+p <- ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
+  geom_point()
+plot(p)
+```
+
+
+我們可以很簡單地用 `scale_color_brewer()` 調整(離散型變數)的填滿顏色
+
+```{r}
+p + scale_color_brewer() # default color scheme
+```
+
+## Types of palettes
+
+看看有那些(離散變數)色彩主題可挑選
+
+```{r, fig.height=8}
+library(RColorBrewer)
+display.brewer.all()
+```
+
+
+- Diverging
+
+BrBG, PiYG, PRGn, PuOr, RdBu, RdGy, RdYlBu, RdYlGn, Spectral
+
+- Qualitative
+
+Accent, Dark2, Paired, Pastel1, Pastel2, Set1, Set2, Set3
+
+- Sequential
+
+Blues, BuGn, BuPu, GnBu, Greens, Greys, Oranges, OrRd, PuBu, PuBuGn, PuRd, Purples, RdPu, Reds, YlGn, YlGnBu, YlOrBr, YlOrRd
+
+
+換成不同顏色主題試試 `scale_color_brewer palette`:
+
+```{r}
+p + scale_color_brewer(palette="Set1")
+```
+
+
+## 顏色不夠怎麼辦
+
+```{r}
+p2 <- ggplot(mpg) + 
+  geom_bar(aes(x = factor(displ), fill = factor(displ)))
+p2 + scale_fill_brewer(palette="Set2")
+```
+
+
+Indeed `length(unique(mpg$displ))` finds `r length(unique(mpg$displ))` unique values for horse power in mpg, while specified palette Set2 has 8 colors to choose from. Lack of colors in the palette triggers ggplot warnings like this (and invalidates plot as seen above):
+
+```
+1: In brewer.pal(n, pal) :
+  n too large, allowed maximum for palette Set2 is 8
+Returning the palette you asked for with that many colors
+```
+
+
+## Produce larger palettes: Use `colorRamp {grDevices}`
+
+`RColorBrewer` gives us a way to produce larger palettes by interpolating existing ones with constructor function `colorRampPalette`. It generates functions that do actual job: they build palettes with arbitrary number of colors by interpolating existing palette. To interpolate palette Set1 to 22 colors (number of colors is stored in `colour_count` variable for examples to follow):
+
+```{r}
+colour_count = length(unique(mpg$displ))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+getPalette
+
+p2 + 
+  scale_fill_manual(values = getPalette(colour_count)) + 
+  theme(legend.position="right")
+```
+
+
+## Legend problem
+
+Another likely problem with large number of bars in histogram plots is placing of the legend. Adjust legend position and layout using theme and guides functions as follows :
+
+```{r}
+p2 + 
+  scale_fill_manual(values = getPalette(colour_count)) +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow=2))
+```
+
+
+Finally, the same example using in place palette constructor with different choice of library palette:
+
+```{r}
+p2 + 
+  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Accent"))(colour_count)) +
+  theme(legend.position="bottom") +
+  guides(fill=guide_legend(nrow=2))
+```
+
+
+There are many more [scale functions](http://docs.ggplot2.org/current/scale_brewer.html) to choose from depending on aesthetics type (`colour`, `fill`), color types (`gradient`, `hue`, etc.), data values (`discrete` or `continuous`).
+
+## Refernce
+
+- http://novyden.blogspot.tw/2013/09/how-to-expand-color-palette-with-ggplot.html

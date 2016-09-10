@@ -1,5 +1,5 @@
 ---
-title: "JihSun  R Basic Week 3:<br/>Data Visualization in R"
+title: "Data Visualization in R"
 subtitle: "資料視覺化心法與技法"
 author:
     name: "Leo Lu"
@@ -87,6 +87,9 @@ The following single character keyboard shortcuts enable alternate display modes
 
 <img src="img/eda-process.png" style="height:480px; max-width:100%;">
 
+## To Communicate
+
+[![data-science-communicate](http://r4ds.had.co.nz/diagrams/data-science-communicate.png)](http://r4ds.had.co.nz/communicate-intro.html)
 
 ## 1854 年霍亂
 
@@ -432,15 +435,15 @@ ggplot(data = mpg) +
 
 
 
-<!-- ## Aesthetics: Perceptual Task {.flexbox .vcenter} -->
+## Aesthetics: Perceptual Task {.flexbox .vcenter}
 
-<!-- <img src="img/perceptual-task.png" style="max-height:520px; max-width:auto;"> -->
+<img src="img/perceptual-task.png" style="max-height:520px; max-width:auto;">
 
-<!-- <div class="footer"> -->
-<!-- - https://www.geography.wisc.edu/faculty/roth/publications/Roth_2015_EG.pdf -->
-<!-- - http://www.iag-aig.org/attach/30dee1f85f7bd479367f1f933d48b701/V61N1_2FT.pdf -->
-<!-- - http://www.infovis-wiki.net/index.php?title=Visual_Variables -->
-<!-- </div> -->
+<div class="footer">
+- https://www.geography.wisc.edu/faculty/roth/publications/Roth_2015_EG.pdf
+- http://www.iag-aig.org/attach/30dee1f85f7bd479367f1f933d48b701/V61N1_2FT.pdf
+- http://www.infovis-wiki.net/index.php?title=Visual_Variables
+</div>
 
 ## Aesthetics 不只這些
 
@@ -1122,7 +1125,6 @@ ggsave(p,
     - 匯出成 png
 
 
-
 ## 中場休息 ♨️  {.flexbox .vcenter}
 
 <img src="img/take-a-break.gif" style="height:320px; max-width:100%;">
@@ -1168,54 +1170,45 @@ ggsave(device = "png", type = "cairo")`
 <img src="img/import-data-3.png" style="max-height:auto; max-width:100%;">
 
 
-
 # ggplot2 進階操作與延伸應用
-
-
-## Labeling
-
-Sometimes labeling on dots is not an easy work when plottng, especially when you have lots of dots in you plotting area.
-
-- use `geom_text_repel()` instead of `geom_text()`
-
-```{r, fig.asp=0.5}
-library(ggplot2)
-library(ggrepel)
-library(cowplot)
-set.seed(42)
-p1 <- ggplot(mtcars, aes(wt, mpg)) +
-  geom_point(color = 'red') +
-  geom_text(label = rownames(mtcars), color = "#666666") +
-  theme_classic()
-p2 <- ggplot(mtcars, aes(wt, mpg)) +
-  geom_point(color = 'red') +
-  geom_text_repel(label = rownames(mtcars), color = "#666666") +
-  theme_classic()
-cowplot::plot_grid(p1, p2)
-```
 
 ## Scales
 
+`scale_<aes>_<變數屬性>()`
 
-## footnote
+- 調整座標 (刻度 tick-breaks, 標籤 labels)
 
-- `gridExtra`
+## Scales -- 數值、離散座標
+
+`scale_x_continuouts()`
+`scale_x_discrete()`
 
 ```{r}
-library(gridExtra)
 
 ```
 
-## ggplot to Plotly 簡單製作動態圖表
 
-只需要一行神奇的指令！
+## Scales -- 日期座標
 
-```{r, eval=FALSE}
-library(plotly)
-ggplotly(p)
+`scale_x_date(date_breaks = <date breaks>, date_labels = "'%y-%m")`
+
+- **date_breaks**: "2 weeks", "10 years" 等時間間隔
+- **date_labels**: 時間格式`?strptime` 可查詢 date_labels的時間格式怎麼寫
+
+
+```{r, collapse=TRUE}
+# 美國總統資料
+presidential
+
+library(ggrepel)
+presidential %>%
+  mutate(id = 33 + row_number()) %>% # id: 屆數
+  ggplot(aes(start, id)) +
+    geom_point() +
+    geom_segment(aes(xend = end, yend = id)) +
+    scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
+  ggrepel::geom_text_repel(label = Name)
 ```
-
-Excercise: 請把剛才畫的圖變成動態圖表
 
 
 ## Preattentive Processing
@@ -1242,9 +1235,113 @@ Excercise: 請把剛才畫的圖變成動態圖表
 - http://www.infovis-wiki.net/index.php/Preattentive_processing
 </div>
 
-## RColorBrewer
+
+## Scale Color and Fill
+
+離散型資料 vs 連續型資料
+
+![](img/scale_color_fill.png)
+
+## Scale Color and Fill -- 離散型
+
+[RColorBrewer]()是非常專業的(地圖資料)色票工具
 
 [RColorBrewler 演練](#)
+
+```{r, fig.height=8}
+library(RColorBrewer)
+display.brewer.all()
+```
+
+## Scale Color and Fill -- 連續型
+
+```{r}
+presidential %>%
+  mutate(id = 33 + row_number()) %>%
+  ggplot(aes(start, id, colour = party)) +
+    geom_point() +
+    geom_segment(aes(xend = end, yend = id)) +
+    scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue"))
+```
+
+
+## Labeling
+
+想要標註各"車型"油耗效率最佳的車
+
+```{r}
+## 各"車型"油耗效率最佳的車
+best_in_class <- mpg %>%
+  group_by(class) %>%
+  filter(row_number(desc(hwy)) == 1)
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(colour = class)) +
+  geom_text(aes(label = model), data = best_in_class)
+```
+
+## Labeling
+
+- `ggrepel` - 自動計算標註文字的位置
+
+Sometimes labeling on dots is not an easy work when plottng, especially when you have lots of dots in you plotting area.
+
+- use `geom_text_repel()` instead of `geom_text()`
+
+```{r, echo=FALSE, fig.asp=0.5}
+library(ggplot2)
+library(ggrepel)
+library(cowplot)
+
+best_in_class <- mpg %>%
+  group_by(class) %>%
+  filter(row_number(desc(hwy)) == 1)
+p <- ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(colour = class))
+
+p1 <- p +
+  geom_text(aes(label = model),
+            data = best_in_class,
+            color = "#666666") +
+  theme_classic()
+p2 <- p +
+  geom_text_repel(aes(label = model),
+            data = best_in_class,
+            color = "#666666") +
+  theme_classic()
+cowplot::plot_grid(p1, p2)
+```
+
+<!-- ## footnote -->
+
+<!-- - `gridExtra` -->
+
+<!-- ```{r} -->
+<!-- library(gridExtra) -->
+<!-- ``` -->
+
+## ggplot to Plotly 簡單製作動態圖表
+
+只需要一行神奇的指令！
+
+```{r, eval=FALSE}
+library(plotly)
+p <- ggplot() + ...
+ggplotly(p)
+```
+
+Excercise: 請把下面的圖變成動態圖表
+
+```{r}
+p <- ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
+  geom_point()
+```
+
+
+```{r, echo=FALSE}
+library(plotly)
+ggplotly(p)
+```
 
 ## Map 畫地圖 { .smaller }
 
@@ -1260,9 +1357,8 @@ Excercise: 請把剛才畫的圖變成動態圖表
 
 因此，在繪製密度地圖的時候，一定要先想到：我們利用的數據跟人口密度有無相關性，有的話，要怎麼排除人口密度的影響，才能從地圖中找出數據真正埋藏的故事。
 
-[Example](example/map)
+[Example](example/map_leaflet.html)
 
-_leaflet.html
 ## 視覺化應用
 
 - [Example: 樂透資料](example/lottery.html)
@@ -1302,6 +1398,11 @@ _leaflet.html
 ![圖片說明](img)
 ```
 
+## RMarkdown
+
+一起動手來做一份報告
+
+[Example: 資料新聞--台灣實質收入](#)
 
 # Reference
 

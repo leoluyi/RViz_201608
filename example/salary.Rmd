@@ -1,5 +1,5 @@
 ---
-title: "Salary""
+title: "Salary"
 author: "Leo Lu"
 date: "`r Sys.Date()`"
 output:
@@ -8,19 +8,24 @@ output:
     highlight: github
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
 # set root dir when rendering
 knitr::opts_knit$set(root.dir = '..')
 knitr::opts_chunk$set(comment = "#>",
-                      fig.align='center')
+                      fig.align='center',
+                      collapse = TRUE)
 ```
 
 本範例需要的套件
 
 ```{r, message=FALSE}
+library(magrittr)
 library(readr)
+library(readxl)
 library(dplyr)
 library(tidyr)
+library(stringr)
+library(lubridate)
 library(ggplot2)
 ```
 
@@ -30,4 +35,87 @@ library(ggplot2)
 - [行政院主計總處-薪資及生產力統計資料](http://www.dgbas.gov.tw/ct.asp?xItem=1135&ctNode=3253)
 - [行政院主計總處-消費者物價基本分類指數](http://win.dgbas.gov.tw/dgbas03/latestind-pca.asp?i=21)
 
+## Import Dataset
 
+```{r, warning=FALSE, message=FALSE}
+salary_df <- read_excel("data/salary_cpi/MoreTable01.xlsx")
+## fix variable names
+names(salary_df) <- names(salary_df) %>% 
+  make.names() %>% 
+  str_replace_all("(?:\\.)+", "_") %>% 
+  str_replace("_+$", "") %>% 
+  str_replace_all("_([^男女])", "\\1")
+
+cpi_df <- read_csv("data/salary_cpi/PR0101A1Mc.csv", 
+                col_names = c("month", "CPI"),
+                skip = 4, 
+                locale = locale(encoding = "BIG5")) %>% na.omit()
+salary_df
+cpi_df
+```
+
+## Data Cleansing
+
+```{r}
+# data type
+salary_df <- salary_df %>% 
+  mutate_at((contains("")), as.numeric)  
+
+# 月份資料
+salary_df <- salary_df %>% 
+  separate(時間月, into = c("民國年", "月"), sep = "/") %>% 
+  mutate(年 = as.integer(民國年) + 1911) %>% 
+  mutate(month = as.Date(paste(年, 月, "01", sep = "-"))) %>% 
+  select(-c(民國年, 月))
+salary_df %>% select(month)
+
+cpi_df <- cpi_df %>% 
+  mutate(month = str_replace(month, "M", "-")) %>% 
+  mutate(month = paste(month, "01", sep = "-")) %>% 
+  mutate(month = as.Date(month))
+cpi_df %>% select(month)
+```
+
+## 消費者物價指數 -- 物價真的上漲嗎？
+
+```{r}
+# interpolation
+base_date <- approx(cpi_df$CPI, cpi_df$month, xout = 100)$y %>% 
+  as.Date(origin = "1970-01-01")
+
+ggplot(cpi_df) +
+  geom_line(aes(x = month, y = CPI)) +
+  geom_segment(x = 0, 
+               xend =  as.numeric(base_date), 
+               y = 100, yend = 100,
+               color = "grey") +
+   geom_segment(x = as.numeric(base_date), 
+               xend =  as.numeric(base_date), 
+               y = 0, yend = 100,
+               color = "grey") +
+  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
+  ggtitle("CPI\n(base: 2011)")
+```
+
+
+## 實質薪資
+
+[實質薪資如何計算？](http://www.dgbas.gov.tw/ct.asp?xItem=815&ctNode=2332)
+
+實質薪資＝ (計算期之名目薪資/計算期消費者物價指數)*100
+
+
+```{r}
+salary_df %>% 
+  select(month, 經常性薪資) %>% 
+  ggplot() +
+  geom_line(aes(x = month, y = 經常性薪資)) +
+  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
+  ggtitle("Salary")
+```
+
+
+## Reference
+
+- [勞動部工資工時統計](http://statdb.mol.gov.tw/html/com/st0302.htm)
+- http://www.moneynet.com.tw/woman_2.php?i=1880
