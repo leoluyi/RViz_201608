@@ -27,6 +27,7 @@ library(tidyr)
 library(stringr)
 library(lubridate)
 library(ggplot2)
+library(scales)
 ```
 
 
@@ -59,7 +60,8 @@ cpi_df
 ```{r}
 # data type
 salary_df <- salary_df %>% 
-  mutate_at((contains("")), as.numeric)  
+  filter(!is.na(`時間月`)) %>% 
+  mutate_at(vars(matches("薪資|費|工時|率|數")), as.numeric)
 
 # 月份資料
 salary_df <- salary_df %>% 
@@ -93,27 +95,48 @@ ggplot(cpi_df) +
                xend =  as.numeric(base_date), 
                y = 0, yend = 100,
                color = "grey") +
-  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
+  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
   ggtitle("CPI\n(base: 2011)")
 ```
 
+
+
+## 名目薪資
+
+整體
+
+```{r}
+salary_df %>% 
+  group_by(month) %>% 
+  summarise(mean_salary = mean(經常性薪資)) %>% 
+  ggplot() +
+  geom_line(aes(x = month, y = mean_salary)) +
+  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
+  scale_y_continuous(labels = scales::dollar) +
+  ggtitle("Mean Salary")
+```
+
+
+行業別
+
+```{r, fig.height=18}
+salary_df %>% 
+  group_by(month, 行業) %>% 
+  summarise(mean_salary = mean(經常性薪資)) %>% 
+  ggplot() +
+  geom_line(aes(x = month, y = mean_salary)) +
+  facet_wrap(~ 行業, ncol = 5) +
+  scale_x_date(name = "Year", date_breaks = "10 year", date_labels = "'%y") +
+  scale_y_continuous(labels = scales::dollar) +
+  ggtitle("Mean Salary") +
+  theme(text = element_text(family = "STHeiti"))
+```
 
 ## 實質薪資
 
 [實質薪資如何計算？](http://www.dgbas.gov.tw/ct.asp?xItem=815&ctNode=2332)
 
 實質薪資＝ (計算期之名目薪資/計算期消費者物價指數)*100
-
-
-```{r}
-salary_df %>% 
-  select(month, 經常性薪資) %>% 
-  ggplot() +
-  geom_line(aes(x = month, y = 經常性薪資)) +
-  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
-  ggtitle("Salary")
-```
-
 
 ## Reference
 
