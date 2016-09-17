@@ -1625,3 +1625,8 @@ slides > slide:not(.nobackground):before {
 td {
   font-size: 60%;
 }
+/* dotted underline */
+underline {
+    border-bottom-color: green;
+    border-bottom: 0.25em dotted orange;
+}
