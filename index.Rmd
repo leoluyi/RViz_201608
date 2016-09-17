@@ -1465,7 +1465,7 @@ cowplot::plot_grid(p1, p2)
 library(plotly)
 p <- ggplot() + ...
 ggplotly(p)
-```
+``  # 神奇的指令`
 
 Excercise: 請把下面的圖變成動態圖表
 
@@ -1492,7 +1492,7 @@ ggplotly(p)
 
 - Markdown 語法
 
-```{markdown}
+```
 所有換段都必須空一行！！！
 所有換段都必須空一行！！！
 所有換段都必須空一行！！！

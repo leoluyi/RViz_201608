@@ -62,7 +62,8 @@ Open R console and execute following code:
 ```{r}
 ## === install required packages ===
 pkg_list <- c("magrittr", "dplyr", "tidyr", "data.table", "ggplot2",
-              "readr", "lubridate", "extrafont", "ggrepel")
+              "readr", "readxl", "lubridate", "anytime", "extrafont",
+              "ggrepel", "stringr", "ggplot2movies", "cowplot")
 pkg_new <- pkg_list[!(pkg_list %in% installed.packages()[,"Package"])]
 if(length(pkg_new)) install.packages(pkg_new)
 rm(pkg_new, pkg_list)

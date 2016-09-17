@@ -11,7 +11,7 @@
 
 <meta name="author" content="Leo Lu" />
 
-<meta name="date" content="2016-09-08" />
+<meta name="date" content="2016-09-18" />
 
 <title>R Installation Guide</title>
 
@@ -119,7 +119,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">R Installation Guide</h1>
 <h4 class="author"><em>Leo Lu</em></h4>
-<h4 class="date"><em>2016-09-08</em></h4>
+<h4 class="date"><em>2016-09-18</em></h4>
 
 </div>
 
@@ -179,7 +179,8 @@ $(document).ready(function () {
 <p>Open R console and execute following code:</p>
 <pre class="r"><code>## === install required packages ===
 pkg_list &lt;- c(&quot;magrittr&quot;, &quot;dplyr&quot;, &quot;tidyr&quot;, &quot;data.table&quot;, &quot;ggplot2&quot;,
-              &quot;readr&quot;, &quot;lubridate&quot;, &quot;extrafont&quot;, &quot;ggrepel&quot;)
+              &quot;readr&quot;, &quot;readxl&quot;, &quot;lubridate&quot;, &quot;anytime&quot;, &quot;extrafont&quot;,
+              &quot;ggrepel&quot;, &quot;stringr&quot;, &quot;ggplot2movies&quot;, &quot;cowplot&quot;)
 pkg_new &lt;- pkg_list[!(pkg_list %in% installed.packages()[,&quot;Package&quot;])]
 if(length(pkg_new)) install.packages(pkg_new)
 rm(pkg_new, pkg_list)</code></pre>
