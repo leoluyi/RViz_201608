@@ -13,7 +13,8 @@ output:
 knitr::opts_knit$set(root.dir = '..')
 knitr::opts_chunk$set(comment = "#>",
                       fig.align='center',
-                      collapse = TRUE)
+                      collapse = TRUE,
+                      warning = FALSE)
 ```
 
 本範例需要的套件
@@ -60,15 +61,16 @@ cpi_df
 ```{r}
 # data type
 salary_df <- salary_df %>% 
-  filter(!is.na(`時間月`)) %>% 
-  mutate_at(vars(matches("薪資|費|工時|率|數")), as.numeric)
+  filter(!is.na(`時間月`)) %>% # 濾掉非資料列
+  mutate_at(vars(matches("薪資|費|工時|率|數")), as.numeric) %>% # 轉成數值型
+  mutate(行業 = factor(行業, levels = unique(行業)))  # 行業順序
 
 # 月份資料
 salary_df <- salary_df %>% 
-  separate(時間月, into = c("民國年", "月"), sep = "/") %>% 
-  mutate(年 = as.integer(民國年) + 1911) %>% 
-  mutate(month = as.Date(paste(年, 月, "01", sep = "-"))) %>% 
-  select(-c(民國年, 月))
+  separate(時間月, into = c("民國年", "月"), sep = "/") %>% # 先拆分年月
+  mutate(年 = as.integer(民國年) + 1911) %>%                # 轉成西元年
+  mutate(month = as.Date(paste(年, 月, "01", sep = "-"))) %>% # 轉換成日期
+  select(-c(民國年, 月))  # 去掉中間計算用的變數
 salary_df %>% select(month)
 
 cpi_df <- cpi_df %>% 
@@ -103,13 +105,15 @@ ggplot(cpi_df) +
 
 ## 名目薪資
 
-整體
+### 整體情況
 
 ```{r}
-salary_df %>% 
+d <- salary_df %>% 
   group_by(month) %>% 
-  summarise(mean_salary = mean(經常性薪資)) %>% 
-  ggplot() +
+  summarise(mean_salary = mean(經常性薪資))
+head(d)
+
+d <- ggplot(d) +
   geom_line(aes(x = month, y = mean_salary)) +
   scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::dollar) +
@@ -117,28 +121,85 @@ salary_df %>%
 ```
 
 
-行業別
+### 行業別
 
-```{r, fig.height=18}
-salary_df %>% 
+```{r, fig.height=20}
+d <- salary_df %>% 
   group_by(month, 行業) %>% 
-  summarise(mean_salary = mean(經常性薪資)) %>% 
-  ggplot() +
+  summarise(mean_salary = median(經常性薪資))
+head(d)
+
+ggplot(d) +
   geom_line(aes(x = month, y = mean_salary)) +
-  facet_wrap(~ 行業, ncol = 5) +
+  facet_wrap(~ 行業, ncol = 4) +
   scale_x_date(name = "Year", date_breaks = "10 year", date_labels = "'%y") +
   scale_y_continuous(labels = scales::dollar) +
-  ggtitle("Mean Salary") +
-  theme(text = element_text(family = "STHeiti"))
+  labs(title = "歷年名目薪資", 
+       subtitle = "各行業中位數薪資, $", xlab = "") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
 ```
 
 ## 實質薪資
 
 [實質薪資如何計算？](http://www.dgbas.gov.tw/ct.asp?xItem=815&ctNode=2332)
 
-實質薪資＝ (計算期之名目薪資/計算期消費者物價指數)*100
+實質薪資＝ (計算期之名目薪資 / 計算期消費者物價指數) * 100
+
+### 整體情況
+
+```{r}
+d <- salary_df %>% 
+  left_join(cpi_df, by = "month") %>%     # 合併 CPI 資料
+  mutate(real_wage = 經常性薪資 / CPI * 100) %>%  # 計算實質薪資
+  group_by(month) %>% 
+  summarise(mean_real_wage = mean(real_wage)) 
+head(d)
+
+ggplot(d) +
+  geom_line(aes(x = month, y = mean_real_wage)) +
+  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
+  scale_y_continuous(labels = scales::dollar) +
+  geom_hline(yintercept = max(d %>% 
+                                filter(month == max(month)) %>% 
+                                .[["mean_real_wage"]], 
+                              na.rm = TRUE),
+             color = "darkred") +
+  ggtitle("中位數實質薪資") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+```
+
+### 行業別
+
+```{r, fig.height=20}
+d <- salary_df %>% 
+  left_join(cpi_df, by = "month") %>%     # 合併 CPI 資料
+  mutate(real_wage = 經常性薪資 / CPI * 100) %>%  # 計算實質薪資
+  group_by(month, 行業) %>% 
+  summarise(mean_real_wage = median(real_wage)) 
+
+d_now <- d %>% 
+  group_by(行業) %>% 
+  filter(month == max(month, na.rm = TRUE))
+
+p <- ggplot(d) +
+  geom_line(aes(x = month, y = mean_real_wage)) +
+  scale_x_date(name = "Year", date_breaks = "10 year", date_labels = "'%y") +
+  scale_y_continuous(labels = scales::dollar) +
+  geom_hline(data = d_now,
+             aes(yintercept = mean_real_wage),
+             color = "darkred") +
+  facet_wrap(~ 行業, ncol = 4) +
+  labs(title = "實質薪資倒退幾年？",
+       xlab = "",
+       subtitle = "歷年各行業中位數實質薪資, $",
+       caption = "資料來源: \n
+                  行政院主計總處-薪資及生產力統計資料\n
+                  行政院主計總處-消費者物價基本分類指數") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+plot(p)
+```
 
 ## Reference
 
-- [勞動部工資工時統計](http://statdb.mol.gov.tw/html/com/st0302.htm)
+- [勞動部工資工時統計名詞](http://statdb.mol.gov.tw/html/com/st0302.htm)
 - http://www.moneynet.com.tw/woman_2.php?i=1880
