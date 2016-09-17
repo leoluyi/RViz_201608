@@ -27,8 +27,9 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(extrafont)  # fonts
-library(ggrepel)
+library(ggrepel)  # text labeling
+library(cowplot); theme_set(theme_grey()) 
+library(ggplot2movies) # IMDB movie data
 ```
 
 ## How to use this slides
@@ -215,7 +216,7 @@ http://www.excelcharts.com/blog/infographics-data-visualization/
 - 所有繪圖函數都有背後的視覺化邏輯（[Grammar of Graphics](http://www.amazon.com/The-Grammar-Graphics-Statistics-Computing/dp/0387245448)）
 
 __Grammar of Graphics__ 的作用就是幫助我們將圖表拆解成個別的元素，
-然後將這些元素按照邏輯個別操作，***正確***又***簡單***地達到圖表的目的
+然後將這些元素按照邏輯個別操作，<underline>***正確***又***簡單***</underline>地達到圖表的目的
 
 ## {.flexbox .vcenter}
 
@@ -304,6 +305,7 @@ ggplot(data = mpg) +
   geom_point(mapping = aes(x = class, y = drv))
 ```
 
+# Aesthetic Mapping
 
 ## Aesthetic Mapping
 
@@ -453,11 +455,11 @@ ggplot(data = mpg) +
 
 <img src="img/aes-search.png" style="max-height:40%; max-width:auto;">
 
-## Visual Variable Accuracy {.flexbox .vcenter}
+<!-- ## Visual Variable Accuracy {.flexbox .vcenter} -->
 
-<a href="http://moritz.stefaner.eu/resources/datavis/osna/2013/">
-<img src="img/mackinlay1.jpg" style="height:480px; max-width:auto;">
-</a>
+<!-- <a href="http://moritz.stefaner.eu/resources/datavis/osna/2013/"> -->
+<!-- <img src="img/mackinlay1.jpg" style="height:480px; max-width:auto;"> -->
+<!-- </a> -->
 
 ## Visual Variable Accuracy {.flexbox .vcenter}
 
@@ -480,24 +482,28 @@ ggplot(data = mpg) +
 
 ## Junk Colors
 
-<img src="img/junk-colors.png" style="max-height:auto; max-width:100%;">
+<!-- <img src="img/junk-colors.png" style="max-height:auto; max-width:100%;"> -->
+
+```{r, echo=FALSE}
+ggplot(data = mpg) +
+  geom_bar(mapping = aes(x = class, fill = class))
+```
 
 ## 如何判斷好的圖表
 
 一開始我們只要著重在圖表的資訊本身:
 
-1. 增加資訊
-2. 減少雜訊
+1. <underline>增加資訊</underline>
+2. <underline>減少雜訊</underline>
 
 ## Data-Ink Mazimazation
 
 1. 資訊在哪裡？
-    - 跟資料本身相關的
-    - 跟目的相關的
+    - 跟<underline>資料本身</underline>相關的
+    - 跟<underline>目的</underline>相關的
 
 2. 雜訊在哪裡？
     - 其他一切不相關的都先當作雜訊
-
 
 
 ## 消去不需要的元素 {.flexbox .vcenter}
@@ -520,10 +526,16 @@ ggplot(data = mpg) +
     - 標色
 
 
+## 中場休息 ♨️  {.flexbox .vcenter}
+
+<a href="http://clterryart.tumblr.com/" target="_blank">
+<img src="http://66.media.tumblr.com/282aaeea43d9a7ebd6f58e2270f1d7c5/tumblr_ockldgSWib1qzomoco1_540.gif" style="height:480px; max-width:100%;">
+</a>
+
 ## There are two main plotting functions in `ggplot2`:
 
 - `qplot()`: (quick plot) 需要快速畫圖時才使用，用法和 R 的內建繪圖函數 `plot()` 差不多
-- `ggplot()`: 推薦的繪圖方法，搭配繪圖步驟的其他函數逐步建構圖層
+- `ggplot()`: <underline>推薦的繪圖方法</underline>，搭配繪圖步驟的其他函數逐步建構圖層
 
 ## ggplot2 起手式
 
@@ -540,13 +552,13 @@ ggplot(data = <DATA>) + # Data
 
 ## Data for Plot -- ETL
 
-- 每一欄 (column) 都是一個(繪圖)變數
-- 每一列 (row) 都是一筆觀察值
+- 每一欄 (column) 都是一個<underline>(繪圖)變數</underline>
+- 每一列 (row) 都是一筆<underline>觀察值</underline>
 - Wide Format -> Long Format (`tidyr`)
     - [你的資料是寬的還是長的？](https://connerchang.github.io/2016/08/12/long-wide-format/)
     
 
-> 資料和圖表是一體兩面，先有資料才有圖表
+> 資料和圖表是一體兩面，<underline>先有資料才有圖表</underline>
 
 ## 以 `mpg` 為例
 
@@ -588,6 +600,26 @@ ggplot(data = mpg) +
 ```{r}
 ggplot(data = mpg) +
   geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+
+
+## Layers 圖層觀念
+
+要呈現多個幾何圖形物件 (Geoms) 時要怎麼做到呢？
+
+- 一個 `geom_<xxx>()` 就會在圖上畫一圖層 (Layer)
+- 可一層層疊加上去
+- 每個圖層甚至可以用不同的 data，在畫進階圖表時很常用到
+- 但要注意是否有預設的 aesthetic 不小心 mapping 到該圖層
+
+## Layers 圖層觀念
+
+- 兩層圖層
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(mapping= aes(x = displ, y = hwy))
 ```
 
 ## Geoms {.flexbox .vcenter}
@@ -654,17 +686,6 @@ mpg %>%
 
 <img src="img/mpg-table-viz.png" style="height:540px; max-width:100%;">
 
-
-<!-- ## Try Bar Charts -->
-
-<!-- - 填滿顏色 `fill` -->
-
-<!-- (錯誤示範：不建議同一變數 mapping 多個 aes) -->
-
-<!-- ```{r} -->
-<!-- ggplot(data = mpg) + -->
-<!--   geom_bar(mapping = aes(x = class, fill = class)) -->
-<!-- ``` -->
 
 ## Stats (Geom 的一體兩面)
 
@@ -760,6 +781,17 @@ ggplot(data = d) +
            stat = "identity")
 ```
 
+## Try Bar Charts
+
+- 填滿顏色 `fill`
+
+(錯誤示範：不建議同一變數 mapping 多個 aes)
+
+```{r}
+ggplot(data = mpg) +
+  geom_bar(mapping = aes(x = class, fill = class))
+```
+
 ## Geoms + Stats 實例
 
 - **bar charts**, **histograms**: 計算每一組 bin 裡面的數目.
@@ -800,26 +832,6 @@ ggplot(data = mpg) +
 <img src="img/google-ggplot2.png" style="max-height:auto; max-width:100%;">
 
 - [視覺化資源整理](#Resources)
-
-
-## Layers 圖層觀念
-
-要呈現多個幾何圖形物件 (Geoms) 時要怎麼做到呢？
-
-- 一個 `geom_<xxx>()` 就會在圖上畫一圖層 (Layer)
-- 可一層層疊加上去
-- 每個圖層甚至可以用不同的 data，在畫進階圖表時很常用到
-- 但要注意是否有預設的 aesthetic 不小心 mapping 到該圖層
-
-## Layers 圖層觀念
-
-- 兩層圖層
-
-```{r}
-ggplot(data = mpg) +
-  geom_point(mapping = aes(x = displ, y = hwy)) +
-  geom_smooth(mapping= aes(x = displ, y = hwy))
-```
 
 
 ## Positions：當圖形在位置打架時要怎麼辦？
@@ -1014,20 +1026,34 @@ ggplot(data = d) +
   facet_wrap( ~ manufacturer, ncol = 2)
 ```
 
-## 中場休息 ♨️  {.flexbox .vcenter}
-
-<img src="img/take-a-break.gif" style="height:480px; max-width:100%;">
-
+# 來談談如何判別一個好的資料視覺化圖表
 
 ## Junk Charts & Trifecta Checkup
 
-剛才講到太多
+![](img/trifecta-checkup.png)
 
+## {.flexbox .vcenter}
+
+![](img/bike-1.png)
+
+## {.flexbox .vcenter}
+
+![](img/bike-2.png)
+
+## {.flexbox .vcenter}
+
+![](img/bike-3.png)
+
+## {.flexbox .vcenter}
+
+![](img/bike-4.png)
 
 ## Labels
 
 圖表一定要有標題，別人才知道你要講的故事是什麼
 
+- `ggtitle()`, `xlab()`, `ylab()`
+- 組合技 -- `labs()`: 各種標註(axis labels, legend titles, plot title/subtitle and below-plot caption)
 
 ### 標題
 
@@ -1038,6 +1064,15 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   ggtitle("Fuel efficiency vs. Engine size")
 ```
 
+### 標題 + 副標題
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth() + 
+  labs(title = "Fuel efficiency vs. Engine size",
+       subtitle = "Dataset: mpg")
+```
 
 ### 標題 + 座標軸
 
@@ -1070,33 +1105,12 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 - [`ggthemr`](https://github.com/cttobin/ggthemr)
 
 
-## Export Plots 匯出圖表
 
-```{r, eval=FALSE}
-p <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
-  geom_point(mapping = aes(color = class)) +
-  geom_smooth() +
-  theme_bw()
-
-ggsave(p,
-       filename = "my_plot.png",
-       device = "png", h = 2, w = 3, type = "cairo")
-# system(paste("open my_plot.png"))
-```
-
-## Export Plots 匯出圖表
-
-<img src="img/export-plot-1.png" style="max-height:auto; max-width:100%;">
-
-<img src="img/export-plot-2.png" style="max-height:auto; max-width:100%;">
-
-<img src="img/export-plot-3.png" style="max-height:auto; max-width:100%;">
-
-## ggplot2 的繪圖流程
+## ggplot2 的繪圖流程 (附錄)
 
 <img src="img/ggplot2-basic.png" style="max-height:400px; max-width:100%;">
 
-## ggplot2 的繪圖流程
+## ggplot2 的繪圖流程 (附錄)
 
 1. **Data** (noun/subject)
 2. **Aesthetic mappings** (adjectives): x, y, color, size, ...
@@ -1104,18 +1118,22 @@ ggsave(p,
 4. **Position** (preposition): Scales, Coord, Facet
 5. **Theme**
 
-## ggplot2 視覺化流程總結
+## 視覺化流程總結
 
 (非常重要！)
+(非常重要！)
+(非常重要！)
 
-+ Issue: 這張圖表想解決的問題是什麼？
-+ Variables
+從結果（產出）<underline>倒回來想</underline>
+
++ **Issue**: 這張圖表想解決的<underline>問題是什麼</underline>？
++ **Geoms**: 要畫什麼圖？
+    - bar chart, line chart, heat map, ...
++ **Variables**: 需要那些變數？我的<underline>資料</underline>有這些變數嗎？
     - variables needed from the data
-+ Geoms
-    - **bar chart**, **line chart**, **heat map**, ...
-+ Aesthetic Mapping
-    - x:
-    - y: 
++ **Aesthetic Mapping**
+    - x: <variable 1>
+    - y: <variable 2>
     - ...
 
 ## HW: 畫自己的圖
@@ -1128,10 +1146,11 @@ ggsave(p,
     - 匯出成 png
 
 
-## 中場休息 ♨️  {.flexbox .vcenter}
+## 中場休息吃午餐 ♨️  {.flexbox .vcenter}
 
-<img src="img/take-a-break.gif" style="height:320px; max-width:100%;">
-
+<a href="http://clterryart.tumblr.com/post/148345925537" target="_blank">
+<img src="http://66.media.tumblr.com/7e5c7bae924645bfed484e480ae9e200/tumblr_oba7cqIJOL1qzomoco1_540.gif" style="height:480px; max-width:100%;">
+</a>
 
 # R 的繪圖業障消除
 
@@ -1173,21 +1192,105 @@ ggsave(device = "png", type = "cairo")`
 <img src="img/import-data-3.png" style="max-height:auto; max-width:100%;">
 
 
+## 業障 3: Export Plots 如何匯出圖表
+
+```{r, eval=FALSE}
+p <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth() +
+  theme_bw()
+
+ggsave(p,
+       filename = "my_plot.png",
+       device = "png", h = 2, w = 3, type = "cairo")
+# system(paste("open my_plot.png"))
+```
+
+## Export Plots 匯出圖表
+
+<img src="img/export-plot-1.png" style="max-height:auto; max-width:100%;">
+
+<img src="img/export-plot-2.png" style="max-height:auto; max-width:100%;">
+
+<img src="img/export-plot-3.png" style="max-height:auto; max-width:100%;">
+
+
 # ggplot2 進階操作與延伸應用
 
 ## Scales
 
 `scale_<aes>_<變數屬性>()`
 
-- 調整座標 (刻度 tick-breaks, 標籤 labels)
+- 有時候自動產生的座標刻度看起來很糟（區間不對、單位不對）
+- 這時需要手動調整座標
+    1. 刻度 **tick-breaks**
+    2. 標籤文字 **labels**
+    3. 最大最小值 limits
 
-## Scales -- 數值、離散座標
+## Scales -- 數值型座標
 
-`scale_x_continuouts()`
-`scale_x_discrete()`
+`scale_*_continuouts()`
 
-- breaks: 刻度向量
-- labels: `scales` 套件 (千分位, 錢號, 日期)
+- breaks: 刻度向量。(minor_breaks 副格線)
+- labels: 
+    - A character vector giving labels (must be same length as **breaks**)
+    - A function that takes the breaks as input and returns labels as output  
+      `scales` 套件 (千分位`comma()`, 錢號`dollar()`, 單位`unit_format`, ...)
+- limits: `c(最小值, 最大值)`. (Use `NA` to refer to the existing minimum or maximum.)
+
+
+```{r, echo=FALSE, fig.width=9, fig.height=12}
+library(ggplot2movies) # IMDB data
+d <- movies %>% filter(votes > 1000) # 篩選投票數 1,000 以上的電影
+m <- ggplot(d, aes(rating, votes)) +
+  geom_point(na.rm = TRUE) 
+thm <- theme(plot.title = element_text(color='blue'))
+
+m1 = m + ggtitle("(Original)") + thm
+#  * change the axis labels
+m2 = m + scale_y_continuous("number of votes") +
+  ggtitle('scale_y_continuous("number of votes")') + thm
+#  * 千分逗號
+m3 = m + scale_y_continuous(labels = scales::comma) +
+  ggtitle('y: labels = scales::comma') + thm
+#  * modify the tick-breaks
+m4 = m + scale_x_continuous(breaks = c(0:10)) +
+  ggtitle('x: breaks = c(0:10)') + thm
+#  * manually label the ticks
+m5 = m + 
+  scale_x_continuous(breaks = c(2,5,8), 
+                     labels = c("2 (horrible)", "5 (ok)", "8 (awesome)")) +
+  ggtitle('x: breaks = c(2,5,8)\nlabels = c("2 (horrible)", "5 (ok)", "8 (awesome)"))') + thm
+#  * modify the axis limits
+m6 = m + scale_y_continuous(limits = c(0, 5000)) +
+  scale_x_continuous(limits = c(7, 8)) +
+  ggtitle('x: limits = c(7, 8)\ny: limits = c(0, 5000)') + thm
+p <- cowplot::plot_grid(m1, m2, m3, m4, m5, m6, ncol = 2)
+plot(p)
+```
+
+
+```{r, eval=FALSE}
+library(ggplot2movies) # IMDB data
+d <- movies %>% filter(votes > 1000) # 篩選投票數 1,000 以上的電影
+m <- ggplot(d, aes(rating, votes)) +
+  geom_point(na.rm = TRUE)
+m
+# Manipulating the default position scales lets you:
+
+#  * change the axis labels
+m + scale_y_continuous("number of votes")
+#  * 千分逗號
+m + scale_y_continuous(labels = scales::comma)
+#  * modify the tick-breaks
+m + scale_x_continuous(breaks = c(0:10))
+#  * manually label the ticks
+m + scale_x_continuous(breaks = c(2,5,8), 
+                       labels = c("2 (horrible)", "5 (ok)", "8 (awesome)"))
+#  * modify the axis limits
+m + scale_y_continuous(limits = c(0, 5000)) +
+    scale_x_continuous(limits = c(7, 8))
+```
 
 ## Scales -- 日期座標
 
@@ -1196,6 +1299,7 @@ ggsave(device = "png", type = "cairo")`
 - **date_breaks**: "2 weeks", "10 years" 等時間間隔
 - **date_labels**: 時間格式`?strptime` 可查詢 date_labels的時間格式怎麼寫
 
+## Scales -- 日期座標
 
 ```{r, collapse=TRUE}
 # 美國總統資料
@@ -1211,12 +1315,33 @@ presidential %>%
 ```
 
 
+## Scales -- 離散型座標 (附錄，很少用到)
+
+`scale_*_discrete()`
+
+```{r, collapse=TRUE}
+p <- ggplot(diamonds, aes(cut)) + geom_bar()
+p + scale_x_discrete("Cut", 
+                     labels = c("Fair" = "F",
+                                "Good" = "G",
+                                "Very Good" = "VG",
+                                "Perfect" = "P",
+                                "Ideal" = "I"))
+# Use limits to adjust the which levels (and in what order)
+# are displayed
+p + scale_x_discrete(limits=c("Fair","Ideal"))
+# p + xlim("Fair","Ideal", "Good")  # 也可以直接用座標來調
+# p + ylim("I1", "IF")
+```
+
+
+
 ## Preattentive Processing
 
 顏色是很強大的工具
 
 - 低精準性（較難透過顏色判斷數值）
-- 但是很能吸引注意力！
+- 但是很能<underline>吸引注意力</underline>！
 
 <a href="http://lenagroeger.s3.amazonaws.com/WaldoWeeThings/weethings_sourcepost.html">
 <img src="img/preattentivewaldo.jpg" style="height:320px; max-width:100%;">
@@ -1242,11 +1367,12 @@ presidential %>%
 
 ![](img/scale_color_fill.png)
 
+
 ## Scale Color and Fill -- 離散型
 
-[RColorBrewer]()是非常專業的(地圖資料)色票工具
+[RColorBrewer]()是非http://colorbrewer2.org/常專業的(地圖資料)色票工具
 
-[RColorBrewler 演練](#)
+[Example: RColorBrewler 演練](example/RColorBrewer.html)
 
 ```{r, fig.height=8}
 library(RColorBrewer)
@@ -1270,7 +1396,15 @@ presidential %>%
 
 ## Labeling
 
-想要標註各"車型"油耗效率最佳的車
+Exercise: 在剛才畫的 dot plot 標註各"車型"油耗效率最佳的車
+
+```{r, eval=FALSE}
+mpg %>%
+  group_by(class) %>%
+  mutate(rank = row_number(desc(hwy))) %>% 
+  arrange(class, rank, hwy) %>% 
+  View
+```
 
 ```{r}
 ## 各"車型"油耗效率最佳的車
@@ -1358,7 +1492,7 @@ ggplotly(p)
 
 - Markdown 語法
 
-```
+```{markdown}
 所有換段都必須空一行！！！
 所有換段都必須空一行！！！
 所有換段都必須空一行！！！
@@ -1383,8 +1517,9 @@ ggplotly(p)
 
 一起動手來做一份報告
 
-[Example: 資料新聞--台灣實質收入](example/salary.html)
+[Example: 資料新聞--台灣實質薪資真的倒退 20 年嗎？](example/salary.html)
 
+[![](https://scontent-tpe1-1.xx.fbcdn.net/v/t1.0-9/12993628_1734303790181913_6620833205211657698_n.png?oh=a359a151e08d1db77c2af50094e62035&oe=583BDE45)](https://www.facebook.com/imDataMan/photos/a.1703493919929567.1073741828.1703467299932229/1734303790181913/?type=3&theater)
 
 ## 視覺化應用
 
@@ -1430,6 +1565,7 @@ ggplotly(p)
 - [cowplot](https://cran.r-project.org/web/packages/cowplot/vignettes/introduction.html): 組合圖表
 - [ggrepel](https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html): labeling ggplot
 - [directlabels](http://directlabels.r-forge.r-project.org/docs/): labeling ggplot (has few bugs)
+- [ggfortify](https://github.com/sinhrks/ggfortify): Plot models of different packages
 
 #### ggplot2 延伸套件整理
 
@@ -1479,6 +1615,4 @@ ggplotly(p)
 - 畫自己的圖
 
 ### [課後問卷](#)
-
-
 
