@@ -132,7 +132,7 @@ head(d)
 ggplot(d) +
   geom_line(aes(x = month, y = mean_salary)) +
   facet_wrap(~ 行業, ncol = 4) +
-  scale_x_date(name = "Year", date_breaks = "10 year", date_labels = "'%y") +
+  scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
   scale_y_continuous(labels = scales::dollar) +
   labs(title = "歷年名目薪資", 
        subtitle = "各行業中位數薪資, $", xlab = "") +
@@ -183,14 +183,13 @@ d_now <- d %>%
 
 p <- ggplot(d) +
   geom_line(aes(x = month, y = mean_real_wage)) +
-  scale_x_date(name = "Year", date_breaks = "10 year", date_labels = "'%y") +
+  scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
   scale_y_continuous(labels = scales::dollar) +
   geom_hline(data = d_now,
              aes(yintercept = mean_real_wage),
              color = "darkred") +
   facet_wrap(~ 行業, ncol = 4) +
   labs(title = "實質薪資倒退幾年？",
-       xlab = "",
        subtitle = "歷年各行業中位數實質薪資, $",
        caption = "資料來源: \n
                   行政院主計總處-薪資及生產力統計資料\n
