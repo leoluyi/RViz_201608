@@ -7,7 +7,7 @@
 
 ## Slides
 
-[here](https://leoluyi.github.io/RViz_201608/)
+[here](https://leoluyi.github.io/RViz_201609/)
 
 ---
 
