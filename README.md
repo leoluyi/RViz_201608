@@ -9,6 +9,11 @@
 
 [here](https://leoluyi.github.io/RViz_201609/)
 
+## Install required packages
+
+[Package Installation
+Guide](https://leoluyi.github.io/RViz_201609/install_R.html)
+
 ---
 
 ## 講師介紹：[呂奕](https://tw.linkedin.com/in/leoluyi)
