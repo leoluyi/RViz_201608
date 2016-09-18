@@ -97,7 +97,10 @@ ggplot(cpi_df) +
                xend =  as.numeric(base_date), 
                y = 0, yend = 100,
                color = "grey") +
-  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
   ggtitle("CPI\n(base: 2011)")
 ```
 
@@ -111,11 +114,14 @@ ggplot(cpi_df) +
 d <- salary_df %>% 
   group_by(month) %>% 
   summarise(mean_salary = mean(經常性薪資))
-head(d)
+d
 
-d <- ggplot(d) +
+ggplot(d) +
   geom_line(aes(x = month, y = mean_salary)) +
-  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
   scale_y_continuous(labels = scales::dollar) +
   ggtitle("Mean Salary")
 ```
@@ -123,19 +129,14 @@ d <- ggplot(d) +
 
 ### 行業別
 
-```{r, fig.height=20}
-d <- salary_df %>% 
-  group_by(month, 行業) %>% 
-  summarise(mean_salary = median(經常性薪資))
-head(d)
-
-ggplot(d) +
-  geom_line(aes(x = month, y = mean_salary)) +
+```{r, fig.height=22}
+ggplot(salary_df) +
+  geom_line(aes(x = month, y = 經常性薪資)) +
   facet_wrap(~ 行業, ncol = 4) +
   scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
   scale_y_continuous(labels = scales::dollar) +
   labs(title = "歷年名目薪資", 
-       subtitle = "各行業中位數薪資, $", xlab = "") +
+       subtitle = "各行業平均薪資, $", xlab = "") +
   theme(text = element_text(family = "STHeiti")) # Mac font
 ```
 
@@ -153,44 +154,47 @@ d <- salary_df %>%
   mutate(real_wage = 經常性薪資 / CPI * 100) %>%  # 計算實質薪資
   group_by(month) %>% 
   summarise(mean_real_wage = mean(real_wage)) 
-head(d)
+d
 
 ggplot(d) +
   geom_line(aes(x = month, y = mean_real_wage)) +
-  scale_x_date(name = "Year", date_breaks = "5 year", date_labels = "%Y") +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
   scale_y_continuous(labels = scales::dollar) +
   geom_hline(yintercept = max(d %>% 
                                 filter(month == max(month)) %>% 
                                 .[["mean_real_wage"]], 
                               na.rm = TRUE),
              color = "darkred") +
-  ggtitle("中位數實質薪資") +
+  ggtitle("整體平均實質薪資") +
   theme(text = element_text(family = "STHeiti")) # Mac font
 ```
 
 ### 行業別
 
-```{r, fig.height=20}
+```{r, fig.height=22}
 d <- salary_df %>% 
-  left_join(cpi_df, by = "month") %>%     # 合併 CPI 資料
-  mutate(real_wage = 經常性薪資 / CPI * 100) %>%  # 計算實質薪資
-  group_by(month, 行業) %>% 
-  summarise(mean_real_wage = median(real_wage)) 
-
+  left_join(cpi_df, by = "month") %>%  # 合併 CPI 資料
+  mutate(real_wage = 經常性薪資 / CPI * 100)  # 計算實質薪資
+# 計算個行業最近一期薪資以畫線
 d_now <- d %>% 
+  select(行業, month, real_wage) %>% 
   group_by(行業) %>% 
   filter(month == max(month, na.rm = TRUE))
+d_now
 
 p <- ggplot(d) +
-  geom_line(aes(x = month, y = mean_real_wage)) +
+  geom_line(aes(x = month, y = real_wage)) +
   scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
   scale_y_continuous(labels = scales::dollar) +
   geom_hline(data = d_now,
-             aes(yintercept = mean_real_wage),
+             aes(yintercept = real_wage),
              color = "darkred") +
   facet_wrap(~ 行業, ncol = 4) +
   labs(title = "實質薪資倒退幾年？",
-       subtitle = "歷年各行業中位數實質薪資, $",
+       subtitle = "各行業平均實質薪資, $",
        caption = "資料來源: \n
                   行政院主計總處-薪資及生產力統計資料\n
                   行政院主計總處-消費者物價基本分類指數") +
