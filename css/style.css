@@ -1628,5 +1628,5 @@ td {
 /* dotted underline */
 underline {
     border-bottom-color: green;
-    border-bottom: 0.25em dotted orange;
+    border-bottom: 0.2em dotted orange;
 }
