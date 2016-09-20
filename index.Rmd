@@ -312,7 +312,7 @@ ggplot(data = mpg) +
 
 ## Aesthetic Mapping
 
-- 在 **Grammar of Graphics** 裡面最重要的概念就是 <underline>**"Aesthetic Mapping"**</underline>
+- 在 **Grammar of Graphics** 裡面最重要的概念就是 **<underline>Aesthetic Mapping</underline>**
 - 在畫圖前我們先來練習用眼睛👀看 **aethetics**
 
 ## Exercise: 觀察 Aesthetic Mapping
@@ -418,8 +418,8 @@ ggplot(data = <DATA>) + # Data
 ```
 
 - `aes()` 可以放在：
-    - `ggplot()`裡面 -- **有**"記憶效果"(成為所有圖層預設)
-    - 外面 `+ aes()` -- **有**"記憶效果"(成為所有圖層預設)
+    - `ggplot()`裡面 -- **有**<underline>"記憶效果"</underline>(成為所有圖層預設帶入)
+    - 外面 `+ aes()` -- **有**<underline>"記憶效果"</underline>(成為所有圖層預設帶入)
     - `geom_<xxx>()`裡面 -- **無**"記憶效果"(只對該 geom 有效)
 - `geom_<xxx>(inherit.aes=FALSE)`: overrides the default aesthetics.
 
@@ -427,7 +427,7 @@ ggplot(data = <DATA>) + # Data
 
 ## Static Aesthetic
 
-有時候你可能只想要手動設定某個<underline>固定 aesthetic</underline>，這裡的設定只為了美觀，
+有時候你可能只想要手動設定某個<underline>固定 aesthetic</underline>，這個例子的設定只為了美觀，
 並不會帶出多餘資料訊息。
 
 - 將 aesthetic 放在 aes() 裡面: map aesthetic 並自動建立 legend
@@ -490,9 +490,11 @@ ggplot(data = mpg) +
 ```{r, echo=FALSE, fig.width=10, fig.height=4}
 p1 <- ggplot(data = mpg) +
   geom_bar(mapping = aes(x = class, fill = class)) +
-  guides(fill = FALSE)
+  guides(fill = FALSE) +
+  ggtitle("Unnecessary Colors")
 p2 <- ggplot(data = mpg) +
-  geom_bar(mapping = aes(x = class))
+  geom_bar(mapping = aes(x = class)) +
+  ggtitle("Better")
 cowplot::plot_grid(p1, p2)
 ```
 
@@ -616,9 +618,9 @@ ggplot(data = mpg) +
 要呈現多個幾何圖形物件 (Geoms) 時要怎麼做到呢？
 
 - 一個 `geom_<xxx>()` 就會在圖上畫一圖層 (Layer)
-- 可一層層疊加上去
-- 每個圖層甚至可以用不同的 data，在畫進階圖表時很常用到
-- 但要注意是否有預設的 aesthetic 不小心 mapping 到該圖層
+- 可<underline>一層層疊加上去</underline>
+- 每個圖層甚至<underline>可以用不同 data</underline>，在畫進階圖表時很常用到
+- 但要注意是否有<underline>預設的 aesthetic</underline> 不小心 mapping 到該圖層
 
 ## Layers 圖層觀念
 
@@ -632,7 +634,9 @@ ggplot(data = mpg) +
 
 ## Geoms {.flexbox .vcenter}
 
+<a href="http://www.datavizcatalogue.com/index.html" target="_blank">
 <img src="img/chart-types.png" style="height:480px; max-width:auto;">
+</a>
 
 <div class="footer">
 - http://flowingdata.com/2010/03/20/graphical-perception-learn-the-fundamentals-first/
@@ -699,14 +703,14 @@ mpg %>%
 ## Stats (Geom 的一體兩面)
 
 - `stat_<xxx>()`
-- 有些 Geom (例如 scatterplot) 畫的是 **raw value** (stat_identity)
-- 有些 Geom (例如 barplot)會計算新的 stat (e.g., count) 以供畫圖
-- 使用 `geom_<xxx>()` 時，要注意預設的 stat 是什麼
+- 有些 Geom (例如 scatterplot) 畫的是 <underline>**raw value**</underline> (stat_identity)
+- 有些 Geom (例如 barplot)會<underline>計算新的 stat</underline> (e.g., count) 以供畫圖
+- 使用 `geom_<xxx>()` 時，要注意<underline>預設</underline>的 stat 是什麼
 
 > 每個成功的 **Geom** 背後都有一個偉大的 **Stat**
 
 
-## stat = "identity" (不轉換)
+## stat = "identity" <underline>(不轉換)</underline>
 
 <img src="img/visualization-stat-point.png" style="height:520px; max-width:100%;">
 
@@ -724,15 +728,17 @@ mpg %>%
 2. R 幫你算 `dplyr::summarise()`
 3. ggplot2 `geom_bar` 幫你算
 
-=> `?geom_bar` 的預設 `stat` 是 "count"
+> `?geom_bar` 的預設 `stat` 是 "count"
 
 <img src="img/bar-stats.png" style="max-height:auto; max-width:100%;">
 
-## Stats 是怎麼幫你算出來的 {.flexbox .vcenter}
+## stat = "count" 是怎麼幫你算出來的 {.flexbox .vcenter}
 
 <img src="img/visualization-stat-bar-mpg.png" style="height:520px; max-width:100%;">
 
 ## 先手動處理 stats 再畫圖
+
+(有時候遇到複雜的問題就需要手動先算 Stats)
 
 - Plot bar chart with `cut` in dataset `diamonds`
 
@@ -752,7 +758,7 @@ ggplot(data = d) +
            stat = "identity")
 ```
 
-## HW: 有時候遇到複雜的問題就需要手動先算 Stats
+## Ecercise: 手動先算 Stats 再畫圖
 
 - 畫出各種車型(`class`)的平均油耗 bar chart
 
@@ -929,7 +935,7 @@ cowplot::plot_grid(p1, p2)
 - Facets 是很重要的一個呈現方式，一定要學起來
 - 為什麼要用 Facets？
     1. 當同一個座標平面塞入太多變數，會造成大腦無法負荷
-    2. 分拆資訊，讓大腦協助腦補更有效率
+    2. 分拆資訊，讓大腦協助<underline>腦補</underline>更有效率
 
 <a href="https://en.wikipedia.org/wiki/Small_multiple">
 <img src="img/horse-in-motion.jpg" style="height:100px; max-width:100%;">
@@ -948,8 +954,8 @@ cowplot::plot_grid(p1, p2)
 
 ## 先用表格來思考
 
-- 你的（視覺化）表格要怎麼畫別人才會清楚
-- 在把表格放到圖表上面
+- 你的（視覺化）表格要怎麼畫別人才會清楚？
+- 再思考把表格放到圖表上面？
 
 三個變數應該怎麼放：
 
@@ -997,7 +1003,7 @@ ggplot(data = mpg) +
 - x: class
 - y: count
 - <s>fill</s> 刪掉多餘的 mapping
-- facet: manufacturer
+- <underline>facet</underline>: manufacturer
 
 ```{r, fig.width=10, fig.asp=1.4}
 ggplot(data = mpg) +
@@ -1008,7 +1014,7 @@ ggplot(data = mpg) +
 
 ## Facets
 
-- 原則：**一個座標平面(方格)最好不要超過三個變數**
+- 原則：**一個座標平面(方格)最好<underline>不要超過三個變數</underline>**
 - Don't [overplotting](http://www.perceptualedge.com/articles/visual_business_intelligence/over-plotting_in_graphs.pdf)
 - 拆出類別變數 (nominal) 放在個別的小方格 (facets)
 
@@ -1070,6 +1076,8 @@ ggplot(data = d) +
 - `ggtitle()`, `xlab()`, `ylab()`
 - 組合技 -- `labs()`: 各種標註(axis labels, legend titles, plot title/subtitle and below-plot caption)
 
+## Labels
+
 ### 標題
 
 ```{r}
@@ -1077,16 +1085,6 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   geom_point(mapping = aes(color = class)) +
   geom_smooth() + 
   ggtitle("Fuel efficiency vs. Engine size")
-```
-
-### 標題 + 副標題
-
-```{r}
-ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
-  geom_point(mapping = aes(color = class)) +
-  geom_smooth() + 
-  labs(title = "Fuel efficiency vs. Engine size",
-       subtitle = "Dataset: mpg")
 ```
 
 ### 標題 + 座標軸
@@ -1100,6 +1098,18 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   ylab("Highway fuel efficiency (mpg)") 
 ```
 
+### 標題 + 副標題 (Dev 版本) + Color (legend title)
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth() + 
+  labs(title = "Fuel efficiency vs. Engine size",
+       subtitle = "Dataset: mpg",
+       color = "Car Class")
+```
+
+
 ## Theme
 
 ```{r}
@@ -1110,6 +1120,8 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 ```
 
 ## ggplot2 內建 theme
+
+Exercise: 試試看不同的 theme_*()
 
 <img src="img/visualization-themes.png" style="height:520px; max-width:100%;">
 
@@ -1134,16 +1146,22 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 4. **Position** (preposition): Scales, Coord, Facet
 5. **Theme**
 
+
+## 中場休息吃午餐 ♨️  {.flexbox .vcenter}
+
+<a href="http://clterryart.tumblr.com/post/148345925537" target="_blank">
+<img src="http://66.media.tumblr.com/7e5c7bae924645bfed484e480ae9e200/tumblr_oba7cqIJOL1qzomoco1_540.gif" style="height:480px; max-width:100%;">
+</a>
+
+
 ## 視覺化流程總結
 
-(非常重要！)  
-(非常重要！)  
-(非常重要！)
+(非常重要！)  (非常重要！)  (非常重要！)
 
-> 從結果（產出）<underline>倒回來想</underline>
+<underline>***從結果（產出）倒回來想***</underline>
 
 1. **Issue**: 這張圖表想解決的<underline>問題是什麼</underline>？
-2. **Geoms**: 要畫什麼樣的圖？
+2. **Geoms**: 要<underline>畫什麼樣的圖</underline>？
     - bar chart, line chart, heat map, ...
 3. **Variables**: 需要那些變數？我的<underline>資料</underline>有這些變數嗎？
     - variables needed from the data
@@ -1151,6 +1169,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
     - x: <variable 1>
     - y: <variable 2>
     - ...
+
 
 ## HW: 畫自己的圖
 
@@ -1162,13 +1181,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
     - 匯出成 png
 
 
-## 中場休息吃午餐 ♨️  {.flexbox .vcenter}
-
-<a href="http://clterryart.tumblr.com/post/148345925537" target="_blank">
-<img src="http://66.media.tumblr.com/7e5c7bae924645bfed484e480ae9e200/tumblr_oba7cqIJOL1qzomoco1_540.gif" style="height:480px; max-width:100%;">
-</a>
-
-# R 的繪圖業障消除
+# R 的繪圖業障消除<br/>很少人解，卻很關鍵的技巧
 
 ## 業障 1: 中文字型
 
@@ -1216,10 +1229,20 @@ p <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   geom_smooth() +
   theme_bw()
 
+## ggplot 匯出專用
 ggsave(p,
        filename = "my_plot.png",
        device = "png", h = 2, w = 3, type = "cairo")
 # system(paste("open my_plot.png"))
+```
+
+或用
+
+```{r, eval=FALSE}
+png(filename = "my_plot.png",
+    h = 2, w = 3, type = "cairo")  # 開啟繪圖 device (這裡用的是 png)
+plot(p)    # 開始畫圖
+dev.off()  # 關閉繪圖 device
 ```
 
 ## Export Plots 匯出圖表
@@ -1240,8 +1263,10 @@ ggsave(p,
 - 有時候各 Aes 自動產生的 Scale 看起來很糟（區間不對、單位不對、顏色不對, ...）
 - 這時需要<underline>調整 Aes 的 Scale </underline>
 
-| <aes>    | Description                          |
+| \<aes\>  | Description                          |
 |----------|--------------------------------------|
+| x        | x position and coordinate            |
+| y        | y position and coordinate            |
 | colour   | Color of lines and points            |
 | fill     | Color of area fills (e.g. bar graph) |
 | linetype | Solid/dashed/dotted lines            |
@@ -1249,7 +1274,9 @@ ggsave(p,
 | size     | Size of points                       |
 | alpha    | Opacity/transparency                 |
 
-| <屬性>     | Description                                                           |
+<p/>
+
+| \<屬性\>   | Description                                                           |
 |------------|-----------------------------------------------------------------------|
 | hue        | Equally-spaced colors from the color wheel                            |
 | manual     | Manually-specified values (e.g., colors, point shapes, line types)    |
@@ -1272,6 +1299,20 @@ ggsave(p,
 - limits 最大最小值
     - `c(最小值, 最大值)`. (Use `NA` to refer to the existing minimum or maximum.)
 
+## Scales -- 數值型座標
+
+```{r, eval=FALSE}
+library(ggplot2movies) # IMDB data
+movies
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2movies) # IMDB data
+DT::datatable(movies[sample(nrow(movies), 30),])
+```
+
+
+## Scales -- 數值型座標
 
 ```{r, echo=FALSE, fig.width=9, fig.height=12}
 library(ggplot2movies) # IMDB data
@@ -1303,6 +1344,7 @@ p <- cowplot::plot_grid(m1, m2, m3, m4, m5, m6, ncol = 2)
 plot(p)
 ```
 
+## Scales -- 數值型座標
 
 ```{r, eval=FALSE}
 library(ggplot2movies) # IMDB data
@@ -1310,17 +1352,20 @@ d <- movies %>% filter(votes > 1000) # 篩選投票數 1,000 以上的電影
 m <- ggplot(d, aes(rating, votes)) +
   geom_point(na.rm = TRUE)
 m
-# Manipulating the default position scales lets you:
 
 #  * change the axis labels
 m + scale_y_continuous("number of votes")
+
 #  * 千分逗號
 m + scale_y_continuous(labels = scales::comma)
+
 #  * modify the tick-breaks
 m + scale_x_continuous(breaks = c(0:10))
+
 #  * manually label the ticks
 m + scale_x_continuous(breaks = c(2,5,8), 
                        labels = c("2 (horrible)", "5 (ok)", "8 (awesome)"))
+
 #  * modify the axis limits
 m + scale_y_continuous(limits = c(0, 5000)) +
     scale_x_continuous(limits = c(7, 8))
@@ -1328,10 +1373,13 @@ m + scale_y_continuous(limits = c(0, 5000)) +
 
 ## Scales -- 日期座標
 
-`scale_x_date(date_breaks = <date breaks>, date_labels = "'%y-%m")`
+```{r, eval=FALSE}
+scale_x_date(date_breaks = <date breaks>, 
+             date_labels = "'%y-%m")
+```
 
-- **date_breaks**: "2 weeks", "10 years" 等時間間隔
-- **date_labels**: 時間格式`?strptime` 可查詢 date_labels的時間格式怎麼寫
+- **date_breaks**: 時間間隔 `"2 weeks"`, `"10 years"`, ...
+- **date_labels**: 時間格式`?strptime`。可查詢 date_labels的時間格式怎麼寫
 
 ## Scales -- 日期座標
 
@@ -1339,9 +1387,10 @@ m + scale_y_continuous(limits = c(0, 5000)) +
 # 美國總統資料
 presidential
 
-presidential %>%
-  mutate(id = 33 + row_number()) %>% # id: 屆數
-  ggplot(aes(start, id)) +
+d <- presidential %>%
+  mutate(id = 33 + row_number())  # id: 屆數
+
+ggplot(d, aes(x = start, y = id)) +
     geom_point() +
     geom_segment(aes(xend = end, yend = id)) +
     scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
@@ -1371,6 +1420,13 @@ p + scale_x_discrete(limits=c("Fair","Ideal"))
 # p + xlim("Fair","Ideal", "Good")
 # p + ylim("I1", "IF")
 ```
+
+## 中場休息 ♨️  {.flexbox .vcenter}
+
+<a href="http://clterryart.tumblr.com/" target="_blank">
+<img src="http://66.media.tumblr.com/282aaeea43d9a7ebd6f58e2270f1d7c5/tumblr_ockldgSWib1qzomoco1_540.gif" style="height:480px; max-width:100%;">
+</a>
+
 
 # Colors
 
@@ -1425,9 +1481,10 @@ display.brewer.all()
 ## Scale Color and Fill -- Manual (手動填色)
 
 ```{r}
-presidential %>%
-  mutate(id = 33 + row_number()) %>%
-  ggplot(aes(start, id, colour = party)) +
+d <- presidential %>%
+  mutate(id = 33 + row_number())
+
+ggplot(d, aes(start, id, colour = party)) +
   geom_point() +
   geom_segment(aes(xend = end, yend = id)) +
   scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue")) +
@@ -1442,6 +1499,9 @@ presidential %>%
 Exercise: 在剛才畫的 dot plot 標註各"車型"油耗效率最佳的車
 
 ```{r, eval=FALSE}
+library(dplyr)
+library(ggplot2)
+
 mpg %>%
   group_by(class) %>%
   mutate(rank = row_number(desc(hwy))) %>% 
@@ -1469,6 +1529,7 @@ Sometimes labeling on dots is not an easy work when plottng, especially when you
 - use `geom_text_repel()` instead of `geom_text()`
 
 ```{r, echo=FALSE, fig.asp=0.4, fig.width=8}
+library(dplyr)
 library(ggplot2)
 library(ggrepel)
 library(cowplot)
@@ -1476,6 +1537,7 @@ library(cowplot)
 best_in_class <- mpg %>%
   group_by(class) %>%
   filter(row_number(desc(hwy)) == 1)
+
 p <- ggplot(mpg, aes(x = displ, y = hwy)) +
   geom_point(aes(colour = class))
 
@@ -1556,6 +1618,10 @@ ggplotly(p)
 
 [連結](url)
 ![圖片說明](img)
+
+*斜體*
+**粗體**
+***斜粗體***
 ```
 
 ## R Markdown
@@ -1566,7 +1632,17 @@ ggplotly(p)
 
 [![](https://scontent-tpe1-1.xx.fbcdn.net/v/t1.0-9/12993628_1734303790181913_6620833205211657698_n.png?oh=a359a151e08d1db77c2af50094e62035&oe=583BDE45)](https://www.facebook.com/imDataMan/photos/a.1703493919929567.1073741828.1703467299932229/1734303790181913/?type=3&theater)
 
-## R Markdown
+## 中場休息 ♨️  {.flexbox .vcenter}
+
+<a href="http://clterryart.tumblr.com/" target="_blank">
+<img src="http://66.media.tumblr.com/282aaeea43d9a7ebd6f58e2270f1d7c5/tumblr_ockldgSWib1qzomoco1_540.gif" style="height:480px; max-width:100%;">
+</a>
+
+
+## R Markdown Template
+
+有很多別人開發好的漂亮套版可以直接拿來用，
+今天要教的是 `prettydoc` 這個套件
 
 1. Install prettydoc. `install.packages("prettydoc")`
 2. New File > R Markdown > From Template
@@ -1581,7 +1657,7 @@ ggplotly(p)
 [Example: 地圖視覺化 – Leaflet](example/map_leaflet.html)
 
 <a href="http://xkcd.com/1138/">
-<img src="img/xkcd-heatmap.png"" style="height:4; m80pxax-width:100%;">
+<img src="img/xkcd-heatmap.png" style="height:480px; max-width:100%;">
 </a>
 
 [Data Man](https://www.facebook.com/imDataMan/photos/a.1703493919929567.1073741828.1703467299932229/1744422419170050/?type=3)【畫地圖時最需要注意的地方：人口密度可能欺騙眼睛】
@@ -1608,7 +1684,7 @@ ggplotly(p)
 - [ggplot2 官方使用手冊](http://docs.ggplot2.org/current/): 完整範例細節
 - [Cookbook for R - Graphs](http://www.cookbook-r.com/Graphs/): 此站其他學習資源也很推薦
 
-#### ggplot2 輔助繪圖
+#### ggplot2 延伸套件
 
 - [RColorBrewer](http://bxhorn.com/rcolorbrewer-palettes/): 色票
 - [ColorBrewer by PennState University](http://colorbrewer2.org/): Web tool for guidance in choosing choropleth map color schemes, based on the reasearch of Dr. Cynthia Brewer.
@@ -1650,7 +1726,7 @@ ggplotly(p)
 
 #### 視覺化心法
 
-- [junkcharts](http://junkcharts.typepad.com/)
+- [JunkCharts](http://junkcharts.typepad.com/)
 - [Stephen Few - Perceptual Edge](http://www.perceptualedge.com/examples.php)
 - [資料視覺化](hhttp://blog.infographics.tw/category/%E5%BF%83%E6%B3%95/)
 
