@@ -32,6 +32,19 @@ library(scales)
 ```
 
 
+## 視覺化流程總結
+
+1. **Issue**: 這張圖表想解決的<underline>問題是什麼</underline>？
+2. **Geoms**: 要畫什麼樣的圖？
+    - bar chart, line chart, heat map, ...
+3. **Variables**: 需要那些變數？我的<underline>資料</underline>有這些變數嗎？
+    - variables needed from the data
+4. **Aesthetic Mapping**
+    - x: <variable 1>
+    - y: <variable 2>
+    - ...
+    
+
 ## Data Source
 
 - [行政院主計總處-薪資及生產力統計資料](http://www.dgbas.gov.tw/ct.asp?xItem=1135&ctNode=3253)
@@ -73,6 +86,10 @@ salary_df <- salary_df %>%
   select(-c(民國年, 月))  # 去掉中間計算用的變數
 salary_df %>% select(month)
 
+# 移除重複資料
+salary_df <- salary_df %>% 
+  distinct(month, 行業,.keep_all = TRUE)
+
 cpi_df <- cpi_df %>% 
   mutate(month = str_replace(month, "M", "-")) %>% 
   mutate(month = paste(month, "01", sep = "-")) %>% 
@@ -82,6 +99,14 @@ cpi_df %>% select(month)
 
 ## 消費者物價指數 -- 物價真的上漲嗎？
 
+1. **Issue**: 想知道物價的歷史波動的情況
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: cpi, date (month)
+4. **Aesthetic Mapping**
+    - x: month
+    - y: cpi
+
+    
 ```{r}
 # interpolation
 base_date <- approx(cpi_df$CPI, cpi_df$month, xout = 100)$y %>% 
@@ -93,7 +118,7 @@ ggplot(cpi_df) +
                xend =  as.numeric(base_date), 
                y = 100, yend = 100,
                color = "grey") +
-   geom_segment(x = as.numeric(base_date), 
+  geom_segment(x = as.numeric(base_date), 
                xend =  as.numeric(base_date), 
                y = 0, yend = 100,
                color = "grey") +
@@ -108,7 +133,14 @@ ggplot(cpi_df) +
 
 ## 名目薪資
 
-### 整體情況
+### 整體名目薪資
+
+1. **Issue**: 想知道產業整體的薪資走勢
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: 經常性薪資, month
+4. **Aesthetic Mapping**
+    - x: month
+    - y: mean_salary (手動計算)
 
 ```{r}
 d <- salary_df %>% 
@@ -127,7 +159,15 @@ ggplot(d) +
 ```
 
 
-### 行業別
+### 各行業名目薪資
+
+1. **Issue**: 各行業名目薪資走勢
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: 行業, 經常性薪資, month
+4. **Aesthetic Mapping**
+    - x: month
+    - y: 經常性薪資
+    - facet: 行業
 
 ```{r, fig.height=22}
 ggplot(salary_df) +
@@ -137,6 +177,33 @@ ggplot(salary_df) +
   scale_y_continuous(labels = scales::dollar) +
   labs(title = "歷年名目薪資", 
        subtitle = "各行業平均薪資, $", xlab = "") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+```
+
+### 現今各行業名目薪資排名
+
+1. **Issue**: 那個行業薪水最高呢？
+2. **Geoms**: bar chart
+3. **Variables**: 行業, 經常性薪資
+4. **Aesthetic Mapping**
+    - x: 行業
+    - y: 經常性薪資 (最近一期)
+
+```{r, fig.height=22}
+# 最近一期的統計時間
+(last_date <- salary_df %>% 
+  select(month) %>% 
+  .[[1]] %>% 
+  max(na.rm = TRUE))
+# 篩選最近一期的資料
+d <- salary_df %>% 
+  filter(month == last_date)
+
+ggplot(d) +
+  geom_bar(aes(x=reorder(行業, 經常性薪資), y=經常性薪資), 
+           stat = "identity") +
+  xlab("") +
+  coord_flip() +
   theme(text = element_text(family = "STHeiti")) # Mac font
 ```
 
