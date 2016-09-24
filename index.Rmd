@@ -1391,10 +1391,10 @@ d <- presidential %>%
   mutate(id = 33 + row_number())  # id: 屆數
 
 ggplot(d, aes(x = start, y = id)) +
-    geom_point() +
-    geom_segment(aes(xend = end, yend = id)) +
-    scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
-  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2)
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2) +
+  scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y")
 ```
 
 
@@ -1487,9 +1487,9 @@ d <- presidential %>%
 ggplot(d, aes(start, id, colour = party)) +
   geom_point() +
   geom_segment(aes(xend = end, yend = id)) +
-  scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue")) +
+  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2) +
   scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y") +
-  geom_text(aes(label = name), hjust = 0,  vjust = 0, nudge_y = 0.2)
+  scale_colour_manual(values = c(Republican = "Red", Democratic = "Blue"))
 ```
 
 # Text Labeling
@@ -1565,6 +1565,8 @@ cowplot::plot_grid(p1, p2)
 # 動態圖表
 
 ## ggplot to Plotly 簡單製作動態圖表
+
+[Plotly](https://plot.ly/ggplot2/)
 
 只需要一行神奇的指令！
 
