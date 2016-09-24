@@ -9,11 +9,12 @@ output:
     toc: yes
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
 # set root dir when rendering
 knitr::opts_knit$set(root.dir = '..')
 knitr::opts_chunk$set(comment = "#>",
-                      fig.align='center')
+                      fig.align='center',
+                      collapse = TRUE)
 ```
 
  (Inherited the work by <a href="https://github.com/whizzalan">George Chao</a>)
@@ -136,8 +137,9 @@ ggplot(d, aes(x = month, total_sales_M)) +
 
 ```{r}
 ggplot(lottery, aes(x = date, y = total_rewards)) +
-  geom_bar(stat = "identity") +
+  geom_line(stat = "identity") +
   scale_x_date(date_breaks = "3 month", date_labels = "'%y-%m") +
+  scale_y_continuous(labels = scales::dollar) +
   ggtitle("Total Rewards of Lotto649")
 ```
 
@@ -245,7 +247,8 @@ rle_seq <- function(x) {
                             list(rep(0, lengths))))  
   rle_df$rle_seq %>% unlist(use.names = FALSE)
 }
-# 對應到號碼關係
+
+# 展開成每個號碼
 lottery_m <- lottery %>% 
   select(1,n1:s) %>%
   gather(key = var, value = val, n1:s) %>% 
@@ -253,14 +256,19 @@ lottery_m <- lottery %>%
   mutate(YesNo = 1) %>%
   spread(key = val, value = YesNo, fill=0) %>% 
   arrange(desc(period))
+lottery_m
 
 # 距離多久沒開出來
 # rle_seq(lottery_m$`01`)
 d <- lottery_m %>%
-  filter(period >= "105000001") %>% 
-  mutate_at(vars(-contains("period")), rle_seq) %>% 
-  gather(number, rle, -period)
+  filter(period >= "105000001") %>%  # 只篩選今年的資料
+  mutate_at(vars(-contains("period")), rle_seq) %>%  # 針對號碼變數計算多久沒開
+  gather(key = number, value = rle, -period)
 
+
+# 畫圖 ---------------------------------------------
+
+# 先算好每 10 期一個刻度
 breaks <- seq(d$period %>% as.integer() %>% min,
               d$period %>% as.integer() %>% max,
               10)
@@ -269,9 +277,9 @@ ggplot(d, aes(x = factor(period),
               y = factor(number, rev(levels(factor(number)))),
               fill = rle)) +
   geom_tile(colour="white", size = 0.5) +
-  scale_fill_gradientn(name = "Non-open Periods", colours = brewer.pal(5, "YlGnBu"), guide = "legend") +
+  scale_fill_gradientn(name = "Non-open Periods", colours = brewer.pal(5, "YlGnBu"), guide = "legend") +  # 調整數值變數的顏色
   geom_tile(data = d %>% filter(rle == 0),
-            fill = "grey", colour = "white", size = 0.5) +
+            fill = "grey", colour = "white", size = 0.5) + # 開出的號碼
   scale_x_discrete(breaks = breaks) +
   theme(legend.position="top") +
   ylab("Numbers") +
