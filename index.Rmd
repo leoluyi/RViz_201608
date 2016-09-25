@@ -1730,7 +1730,7 @@ ggplotly(p)
 
 - [JunkCharts](http://junkcharts.typepad.com/)
 - [Stephen Few - Perceptual Edge](http://www.perceptualedge.com/examples.php)
-- [資料視覺化](hhttp://blog.infographics.tw/category/%E5%BF%83%E6%B3%95/)
+- [資料視覺化](http://blog.infographics.tw/category/%E5%BF%83%E6%B3%95/)
 
 
 # 最後
