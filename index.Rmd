@@ -51,7 +51,7 @@ The following single character keyboard shortcuts enable alternate display modes
 <p>課程資訊</p>
 <a target="_blank" href="http://data-sci.info/">網站</a>/
 <a target="_blank" href="https://www.facebook.com/datasci.info">粉絲頁</a>/
-<a target="_blank" href="http://data-sci.info/forums/forum/%E8%B3%87%E6%96%99%E7%A7%91%E5%AD%B8-r-%E6%88%B0%E9%AC%A5%E7%87%9F/">論壇</a>/
+<a target="_blank" href="https://github.com/datasci-info/TCA_R_Viz/issues">論壇</a>/
 <a target="_blank" href="https://goo.gl/CX1yya">廣播</a>/
 <a target="_blank" href="https://goo.gl/B3JFBu">共筆</a>
 </div>
