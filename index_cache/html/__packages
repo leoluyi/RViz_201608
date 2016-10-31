@@ -1,0 +1,11 @@
+base
+magrittr
+readr
+dplyr
+tidyr
+ggplot2
+ggrepel
+cowplot
+ggplot2movies
+RColorBrewer
+plotly

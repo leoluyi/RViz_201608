@@ -21,7 +21,7 @@ knitr::opts_chunk$set(warning = TRUE,
                       collapse = FALSE,
                       comment = "#>",
                       fig.align='center',
-                      cache=FALSE)
+                      cache=TRUE)
 library(magrittr)
 library(readr)
 library(dplyr)
@@ -1129,6 +1129,7 @@ Exercise: 試試看不同的 theme_*()
 ## (附錄) Theme 相關套件 { .columns-2 }
 
 - [`ggthemes`](https://cran.r-project.org/web/packages/ggthemes/vignettes/ggthemes.html) (推薦)
+- [`artyfarty`](https://github.com/Bart6114/artyfarty)
 - [`ggthemr`](https://github.com/cttobin/ggthemr)
 
 
@@ -1686,13 +1687,19 @@ ggplotly(p)
 - [ggplot2 官方使用手冊](http://docs.ggplot2.org/current/): 完整範例細節
 - [Cookbook for R - Graphs](http://www.cookbook-r.com/Graphs/): 此站其他學習資源也很推薦
 
+#### Color Palettes
+
+- [viridis](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html)
+- [artyfarty](https://github.com/Bart6114/artyfarty)
+- [RColorBrewer](http://bxhorn.com/rcolorbrewer-palettes/)
+- [ColorBrewer by PennState University](http://colorbrewer2.org/): Web tool for guidance in choosing choropleth map color schemes, based on the reasearch of Dr. Cynthia Brewer.
+
 #### ggplot2 延伸套件
 
-- [RColorBrewer](http://bxhorn.com/rcolorbrewer-palettes/): 色票
-- [ColorBrewer by PennState University](http://colorbrewer2.org/): Web tool for guidance in choosing choropleth map color schemes, based on the reasearch of Dr. Cynthia Brewer.
 - [cowplot](https://cran.r-project.org/web/packages/cowplot/vignettes/introduction.html): 組合圖表
 - [ggrepel](https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html): labeling ggplot
 - [directlabels](http://directlabels.r-forge.r-project.org/docs/): labeling ggplot (has few bugs)
+- [ggforce](https://github.com/thomasp85/ggforce): Accelarating ggplot2
 - [ggfortify](https://github.com/sinhrks/ggfortify): Plot models of different packages
 
 #### ggplot2 延伸套件整理
