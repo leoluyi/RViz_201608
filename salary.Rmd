@@ -1,0 +1,273 @@
+---
+title: "Salary"
+author: "Leo Lu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "#>",
+                      fig.align='center',
+                      collapse = TRUE,
+                      warning = FALSE)
+```
+
+本範例需要的套件
+
+```{r, message=FALSE}
+library(magrittr)
+library(readr)
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(scales)
+```
+
+
+## 視覺化流程總結
+
+1. **Issue**: 這張圖表想解決的<underline>問題是什麼</underline>？
+2. **Geoms**: 要畫什麼樣的圖？
+    - bar chart, line chart, heat map, ...
+3. **Variables**: 需要那些變數？我的<underline>資料</underline>有這些變數嗎？
+    - variables needed from the data
+4. **Aesthetic Mapping**
+    - x: <variable 1>
+    - y: <variable 2>
+    - ...
+    
+
+## Data Source
+
+- [行政院主計總處-薪資及生產力統計資料](http://www.dgbas.gov.tw/ct.asp?xItem=1135&ctNode=3253)
+- [行政院主計總處-消費者物價基本分類指數](http://win.dgbas.gov.tw/dgbas03/latestind-pca.asp?i=21)
+
+## Import Dataset
+
+```{r, warning=FALSE, message=FALSE}
+salary_df <- read_excel("data/salary_cpi/MoreTable01.xlsx")
+## fix variable names
+names(salary_df) <- names(salary_df) %>% 
+  make.names() %>% 
+  str_replace_all("(?:\\.)+", "_") %>% 
+  str_replace("_+$", "") %>% 
+  str_replace_all("_([^男女])", "\\1")
+
+cpi_df <- read_csv("data/salary_cpi/PR0101A1Mc.csv", 
+                col_names = c("month", "CPI"),
+                skip = 4, 
+                locale = locale(encoding = "BIG5")) %>% na.omit()
+salary_df
+cpi_df
+```
+
+## Data Cleansing
+
+```{r}
+# data type
+salary_df <- salary_df %>% 
+  filter(!is.na(`時間月`)) %>% # 濾掉非資料列
+  mutate_at(vars(matches("薪資|費|工時|率|數")), as.numeric) %>% # 轉成數值型
+  mutate(行業 = factor(行業, levels = unique(行業)))  # 行業順序
+
+# 月份資料
+salary_df <- salary_df %>% 
+  separate(時間月, into = c("民國年", "月"), sep = "/") %>% # 先拆分年月
+  mutate(年 = as.integer(民國年) + 1911) %>%                # 轉成西元年
+  mutate(month = as.Date(paste(年, 月, "01", sep = "-"))) %>% # 轉換成日期
+  select(-c(民國年, 月))  # 去掉中間計算用的變數
+salary_df %>% select(month)
+
+# 移除重複資料
+salary_df <- salary_df %>% 
+  distinct(month, 行業,.keep_all = TRUE)
+
+cpi_df <- cpi_df %>% 
+  mutate(month = str_replace(month, "M", "-")) %>% 
+  mutate(month = paste(month, "01", sep = "-")) %>% 
+  mutate(month = as.Date(month))
+cpi_df %>% select(month)
+```
+
+## 消費者物價指數 -- 物價真的上漲嗎？
+
+1. **Issue**: 想知道物價的歷史波動的情況
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: cpi, date (month)
+4. **Aesthetic Mapping**
+    - x: month
+    - y: cpi
+
+    
+```{r}
+# interpolation
+base_date <- approx(cpi_df$CPI, cpi_df$month, xout = 100)$y %>% 
+  as.Date(origin = "1970-01-01")
+
+ggplot(cpi_df) +
+  geom_line(aes(x = month, y = CPI)) +
+  geom_segment(x = 0, 
+               xend =  as.numeric(base_date), 
+               y = 100, yend = 100,
+               color = "grey") +
+  geom_segment(x = as.numeric(base_date), 
+               xend =  as.numeric(base_date), 
+               y = 0, yend = 100,
+               color = "grey") +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
+  ggtitle("CPI\n(base: 2011)")
+```
+
+
+
+## 名目薪資
+
+### 整體名目薪資
+
+1. **Issue**: 想知道產業整體的薪資走勢
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: 經常性薪資, month
+4. **Aesthetic Mapping**
+    - x: month
+    - y: mean_salary (手動計算)
+
+```{r}
+d <- salary_df %>% 
+  group_by(month) %>% 
+  summarise(mean_salary = mean(經常性薪資))
+d
+
+ggplot(d) +
+  geom_line(aes(x = month, y = mean_salary)) +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
+  scale_y_continuous(labels = scales::dollar) +
+  ggtitle("Mean Salary")
+```
+
+
+### 各行業名目薪資
+
+1. **Issue**: 各行業名目薪資走勢
+2. **Geoms**: bar chart, line chart, ...
+3. **Variables**: 行業, 經常性薪資, month
+4. **Aesthetic Mapping**
+    - x: month
+    - y: 經常性薪資
+    - facet: 行業
+
+```{r, fig.height=22}
+ggplot(salary_df) +
+  geom_line(aes(x = month, y = 經常性薪資)) +
+  facet_wrap(~ 行業, ncol = 4) +
+  scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(title = "歷年名目薪資", 
+       subtitle = "各行業平均薪資, $", xlab = "") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+```
+
+### 現今各行業名目薪資排名
+
+1. **Issue**: 那個行業薪水最高呢？
+2. **Geoms**: bar chart
+3. **Variables**: 行業, 經常性薪資
+4. **Aesthetic Mapping**
+    - x: 行業
+    - y: 經常性薪資 (最近一期)
+
+```{r, fig.height=22}
+# 最近一期的統計時間
+(last_date <- salary_df %>% 
+  select(month) %>% 
+  .[[1]] %>% 
+  max(na.rm = TRUE))
+# 篩選最近一期的資料
+d <- salary_df %>% 
+  filter(month == last_date)
+
+ggplot(d) +
+  geom_bar(aes(x=reorder(行業, 經常性薪資), y=經常性薪資), 
+           stat = "identity") +
+  xlab("") +
+  coord_flip() +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+```
+
+## 實質薪資
+
+[實質薪資如何計算？](http://www.dgbas.gov.tw/ct.asp?xItem=815&ctNode=2332)
+
+實質薪資＝ (計算期之名目薪資 / 計算期消費者物價指數) * 100
+
+### 整體情況
+
+```{r}
+d <- salary_df %>% 
+  left_join(cpi_df, by = "month") %>%     # 合併 CPI 資料
+  mutate(real_wage = 經常性薪資 / CPI * 100) %>%  # 計算實質薪資
+  group_by(month) %>% 
+  summarise(mean_real_wage = mean(real_wage)) 
+d
+
+ggplot(d) +
+  geom_line(aes(x = month, y = mean_real_wage)) +
+  scale_x_date(name = "Year", 
+               date_breaks = "5 year", 
+               minor_breaks = scales::date_breaks("year"),
+               date_labels = "%Y") +
+  scale_y_continuous(labels = scales::dollar) +
+  geom_hline(yintercept = max(d %>% 
+                                filter(month == max(month)) %>% 
+                                .[["mean_real_wage"]], 
+                              na.rm = TRUE),
+             color = "darkred") +
+  ggtitle("整體平均實質薪資") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+```
+
+### 行業別
+
+```{r, fig.height=22}
+d <- salary_df %>% 
+  left_join(cpi_df, by = "month") %>%  # 合併 CPI 資料
+  mutate(real_wage = 經常性薪資 / CPI * 100)  # 計算實質薪資
+# 計算個行業最近一期薪資以畫線
+d_now <- d %>% 
+  select(行業, month, real_wage) %>% 
+  group_by(行業) %>% 
+  filter(month == max(month, na.rm = TRUE))
+d_now
+
+p <- ggplot(d) +
+  geom_line(aes(x = month, y = real_wage)) +
+  scale_x_date(name = "", date_breaks = "10 year", date_labels = "'%y") +
+  scale_y_continuous(labels = scales::dollar) +
+  geom_hline(data = d_now,
+             aes(yintercept = real_wage),
+             color = "darkred") +
+  facet_wrap(~ 行業, ncol = 4) +
+  labs(title = "實質薪資倒退幾年？",
+       subtitle = "各行業平均實質薪資, $",
+       caption = "資料來源: \n
+                  行政院主計總處-薪資及生產力統計資料\n
+                  行政院主計總處-消費者物價基本分類指數") +
+  theme(text = element_text(family = "STHeiti")) # Mac font
+plot(p)
+```
+
+## Reference
+
+- [勞動部工資工時統計名詞](http://statdb.mol.gov.tw/html/com/st0302.htm)
+- http://www.moneynet.com.tw/woman_2.php?i=1880
