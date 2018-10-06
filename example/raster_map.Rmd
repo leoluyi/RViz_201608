@@ -6,6 +6,8 @@ output:
   prettydoc::html_pretty:
     theme: cayman
     highlight: github
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include=FALSE}
@@ -21,14 +23,20 @@ knitr::opts_chunk$set(comment = "#>",
 library(raster) # getData()
 ```
 
+## GDAM maps and data
+
+https://gadm.org/
+
 ## Raster + Leaflet
 
 ```{r}
-tw <- getData("GADM", country="TW", level=2)
-#arbitrary data (code from above)
+# get boundaries
+# tw <- getData("GADM", country="TW", level=2) # not working anymore
+
+# add random data
 tw$randomData <- rnorm(n=nrow(tw), 150, 30)
 
-#create a color palette to fill the polygons
+# create a color palette to fill the polygons
 pal <- colorQuantile("Greens", NULL, n = 10)
 
 #create a pop up (onClick)
